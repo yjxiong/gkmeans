@@ -74,13 +74,19 @@ namespace gkmeans {
     inline static Phase phase(){return Get().phase_;}
     inline static void set_phase(Phase new_phase){Get().phase_ = new_phase;}
 
+    inline cudaStream_t stream(int i){return Get().cuda_streams_[i];}
+    inline const vector<cudaStream_t>& stream_vec(){return Get().cuda_streams_;}
+
   protected:
     cublasHandle_t cublas_handle_;
     curandGenerator_t curand_generator_;
 
+    vector<cudaStream_t> cuda_streams_;
+
     Phase phase_;
 
     static shared_ptr<GKMeans> singleton_;
+
 
   private:
     //disable copy and sign constructor
