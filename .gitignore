@@ -28,3 +28,6 @@
 *.exe
 *.out
 *.app
+
+# any build dirs
+*build*/
