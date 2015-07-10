@@ -31,3 +31,6 @@
 
 # any build dirs
 *build*/
+
+#doc
+doc/

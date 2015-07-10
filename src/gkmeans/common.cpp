@@ -3,6 +3,7 @@
 //
 
 #include "gkmeans/common.h"
+#include "gkmeans/utils/cuda_utils.h"
 
 namespace gkmeans{
 

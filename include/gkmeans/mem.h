@@ -6,6 +6,7 @@
 #define GKMEANS_MEM_H
 
 #include "gkmeans/common.h"
+#include "gkmeans/utils/cuda_utils.h"
 
 namespace gkmeans{
 
@@ -16,8 +17,10 @@ namespace gkmeans{
    */
   class Mem{
   public:
-    Mem(size_t count);
+    Mem(size_t count, int device_id);
     Mem(): Mem(0){}
+    Mem(size_t count) : Mem(count, 0){}
+    ~Mem();
 
     enum HEAD {
       GPU,
@@ -39,13 +42,14 @@ namespace gkmeans{
     inline const size_t count(){return count_;}
     void resize(size_t new_count);
 
+    inline const int device_id(){return device_id_;}
+
   protected:
     size_t count_;
+    int device_id_;
     HEAD head_at_;
-
     void* gpu_mem_;
     void* cpu_mem_;
-
     cudaStream_t transfer_stream_;
 
   private:

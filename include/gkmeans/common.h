@@ -39,19 +39,6 @@ using std::map;
 using std::make_pair;
 using std::set;
 
-#define CUDA_CHECK(condition)\
-  do { \
-    cudaError_t error = condition; \
-    CHECK_EQ(error, cudaSuccess)<<" "<<cudaGetErrorString(error); \
-  } while (0)
-
-#define CUBLAS_CHECK(condition)\
-  do {\
-    cublasStatus_t status = condition; \
-    CHECK_EQ(status, CUBLAS_STATUS_SUCCESS)<<"cublas error :"<<status; \
-  } while (0)
-
-
 namespace gkmeans {
   //common code here
   class GKMeans{
@@ -74,13 +61,14 @@ namespace gkmeans {
     inline static Phase phase(){return Get().phase_;}
     inline static void set_phase(Phase new_phase){Get().phase_ = new_phase;}
 
-    inline cudaStream_t stream(int i){return Get().cuda_streams_[i];}
-    inline const vector<cudaStream_t>& stream_vec(){return Get().cuda_streams_;}
+    inline static cublasHandle_t cublas_handle(){return Get().cublas_handle_;}
+    inline static curandGenerator_t curand_generator(){return Get().curand_generator_;}
+    inline static cudaStream_t stream(int i){return Get().cuda_streams_[i];}
+    inline static const vector<cudaStream_t>& stream_vec(){return Get().cuda_streams_;}
 
   protected:
     cublasHandle_t cublas_handle_;
     curandGenerator_t curand_generator_;
-
     vector<cudaStream_t> cuda_streams_;
 
     Phase phase_;
@@ -97,6 +85,12 @@ namespace gkmeans {
   };
 }
 
+//row-major based 1d access
+#define idx2d(row, col, ldx) \
+  row * ldx + col
+
+#define idx3d(x1, x2, x3, dim1, dim2) \
+  (x1 * dim1 + x2) * dim2 + x3
 
 #define GKMEANS_COMMON_H
 

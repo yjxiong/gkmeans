@@ -3,10 +3,11 @@
 //
 
 #include "gkmeans/mem.h"
+#include "gkmeans/utils/cuda_utils.h"
 
 namespace gkmeans{
-  Mem::Mem(size_t count)
-      : count_(count),
+  Mem::Mem(size_t count, int device_id)
+      : count_(count), device_id_(device_id),
         head_at_(Mem::NOT_INITIALIZED),
         gpu_mem_(NULL), cpu_mem_(NULL),
         transfer_stream_(NULL) {}
@@ -119,5 +120,10 @@ namespace gkmeans{
         head_at_ = GPU;
       }
     }
+  }
+
+  Mem::~Mem() {
+    if (gpu_mem_) CUDA_CHECK(cudaFree(gpu_mem_));
+    if (cpu_mem_) CUDA_CHECK(cudaFreeHost(cpu_mem_));
   }
 }
