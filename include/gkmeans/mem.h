@@ -53,22 +53,23 @@ namespace gkmeans{
     cudaStream_t transfer_stream_;
 
   private:
-    inline void init_gpu_mem(){
+    inline void init_gpu_mem(bool zero=false){
       if (!gpu_mem_ && count_){
         CUDA_CHECK(cudaMalloc(&gpu_mem_, count_));
-        cudaMemset(gpu_mem_, 0, count_);
+        if (zero) cudaMemset(gpu_mem_, 0, count_);
       }
     }
-    inline void init_cpu_mem(){
+    inline void init_cpu_mem(bool zero=false){
       if (!cpu_mem_ && count_){
         CUDA_CHECK(cudaMallocHost(&cpu_mem_, count_));
-        memset(cpu_mem_, 0, count_);
+        if (zero) memset(cpu_mem_, 0, count_);
       }
     }
 
     inline void wait_transfer(){
       if (transfer_stream_){
         CUDA_CHECK(cudaStreamSynchronize(transfer_stream_));
+        transfer_stream_ = NULL;
       }
     }
   };

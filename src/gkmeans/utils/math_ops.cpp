@@ -28,25 +28,25 @@ namespace gkmeans{
 
 
 
-  template <typename Dtype>
-  void gk_gemm(const cublasOperation_t TransA,
+  template <>
+  void gk_gemm<float>(const cublasOperation_t TransA,
                const cublasOperation_t TransB, const int M, const int N, const int K,
-               const Dtype alpha, const Dtype* A, const Dtype* B, const Dtype beta,
-               Dtype* C,
+               const float alpha, const float* A, const float* B, const float beta,
+               float* C,
                cudaStream_t stream){
     // Note that cublas follows fortran order.
     int lda = (TransA == CUBLAS_OP_N) ? K : M;
     int ldb = (TransB == CUBLAS_OP_N) ? N : K;
     CUBLAS_SET_STREAM(stream);
-    CUBLAS_CHECK(cublasSgemm(GKMeans::cublas_handle(), TransA, TransB,
+    CUBLAS_CHECK(cublasSgemm(GKMeans::cublas_handle(), TransB, TransA,
                              N, M, K, &alpha, B, ldb, A, lda, &beta, C, N));
 
   }
 
-  template <typename Dtype>
-  void gk_gemv(const cublasOperation_t TransA, const int M, const int N,
-               const Dtype alpha, const Dtype* A, const Dtype* x, const Dtype beta,
-               Dtype* y,
+  template <>
+  void gk_gemv<float>(const cublasOperation_t TransA, const int M, const int N,
+                      const float alpha, const float* A, const float* x, const float beta,
+                      float* y,
                cudaStream_t stream){
     cublasOperation_t cuTransA =
         (TransA == CUBLAS_OP_N) ? CUBLAS_OP_T : CUBLAS_OP_N;
@@ -63,6 +63,6 @@ namespace gkmeans{
                      const float alpha,
                      float *A, cudaStream_t stream){
     CUBLAS_SET_STREAM(stream);
-    CUBLAS_CHECK(cublasSger(GKMeans::cublas_handle(), N, M, &alpha, y, 1, x, 1, A, 1 ));
+    CUBLAS_CHECK(cublasSger(GKMeans::cublas_handle(), N, M, &alpha, y, 1, x, 1, A, N ));
   }
 }

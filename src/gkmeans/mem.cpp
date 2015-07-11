@@ -50,7 +50,7 @@ namespace gkmeans{
       case SYNCED:
         break;
       case NOT_INITIALIZED:{
-        init_cpu_mem();
+        init_cpu_mem(true);
         head_at_ = CPU;
       }
     }
@@ -63,18 +63,18 @@ namespace gkmeans{
         break;
       }
       case CPU:{
-        if (!stream) {
+        CHECK_EQ(true, transfer_stream_==NULL)<<"overlap async operations";
           if (!gpu_mem_) init_gpu_mem();
           CUDA_CHECK(cudaMemcpyAsync(gpu_mem_, cpu_mem_, count_, cudaMemcpyHostToDevice, stream));
           transfer_stream_ = stream;
           head_at_ = SYNCED;
-        }
+
         break;
       }
       case SYNCED:
         break;
       case NOT_INITIALIZED:{
-        init_cpu_mem();
+        init_gpu_mem(true);
         head_at_ = GPU;
       }
     }
@@ -87,6 +87,7 @@ namespace gkmeans{
         break;
       }
       case GPU:{
+        CHECK_EQ(true, transfer_stream_==NULL)<<"overlap async operations";
         if (!cpu_mem_) init_cpu_mem();
         CUDA_CHECK(cudaMemcpy(cpu_mem_, gpu_mem_, count_, cudaMemcpyDeviceToHost));
         head_at_ = SYNCED;
@@ -95,12 +96,11 @@ namespace gkmeans{
       case SYNCED:
         break;
       case NOT_INITIALIZED:{
-        init_cpu_mem();
+        init_cpu_mem(true);
         head_at_ = CPU;
       }
     }
   }
-
   void Mem::to_gpu_sync() {
     wait_transfer();
     switch (head_at_){
@@ -109,14 +109,14 @@ namespace gkmeans{
       }
       case CPU:{
         if (!gpu_mem_) init_gpu_mem();
-        CUDA_CHECK(cudaMemcpy(cpu_mem_, gpu_mem_, count_, cudaMemcpyHostToDevice));
+        CUDA_CHECK(cudaMemcpy(gpu_mem_, cpu_mem_, count_, cudaMemcpyHostToDevice));
         head_at_ = SYNCED;
         break;
       }
       case SYNCED:
         break;
       case NOT_INITIALIZED:{
-        init_gpu_mem();
+        init_gpu_mem(true);
         head_at_ = GPU;
       }
     }

@@ -44,6 +44,10 @@ namespace gkmeans {
   template<typename Dtype>
   void gk_ger(const int M, const int N, const Dtype *x, const Dtype* y, const Dtype alpha, Dtype *A, cudaStream_t stream);
 
+  /** per row argmax and max with CUDA */
+  template <typename Dtype>
+  void gk_rmin(const int M, const int N, const Dtype* data, int* max_idx, Dtype* max_val, cudaStream_t stream);
+
 }
 
 #endif //GKMEANS_MATH_OPS_H

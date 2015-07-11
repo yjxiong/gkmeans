@@ -20,6 +20,10 @@ namespace gkmeans{
     Mat():Mat(vector<size_t>({0})){};
     Mat(vector<size_t> shape) : Mat(shape, 0){}
 
+    ~Mat(){
+      mem_.reset();
+    }
+
     // shape information accessors
     const size_t count(){return count_;};
     const vector<size_t>& shape(){ return shape_;};
@@ -51,6 +55,8 @@ namespace gkmeans{
     size_t count_;
     int device_id_;
   };
+
+  template class Mat<float>;
 }
 
 #endif //GKMEANS_MAT_H

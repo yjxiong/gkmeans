@@ -7,8 +7,6 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/CMake")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -O2")
 
-enable_testing()
-
 #----------------------
 #   Dependencies
 #----------------------
@@ -35,6 +33,7 @@ endif()
 include_directories(include)
 cuda_include_directories(include)
 set(SRC_DIR src/gkmeans)
+set(TEST_SRC_DIR src/tests)
 
 #----------------------
 #   Library
@@ -55,6 +54,20 @@ target_link_libraries(gkl ${LIBRARIES})
 #----------------------
 add_executable(gkmeans tools/gkmeans.cpp)
 target_link_libraries(gkmeans ${LIBRARIES} gkl)
+
+#----------------------
+#   TEST
+#----------------------
+FIND_PACKAGE(GTest REQUIRED)
+
+include_directories(${GTEST_INCLUDE_DIRS})
+
+FILE(GLOB TEST_SRC_FILES ${TEST_SRC_DIR}/*.cpp)
+
+add_executable(testAll ${TEST_SRC_FILES})
+target_link_libraries(testAll ${LIBRARIES} gkl ${GTEST_LIBRARIES})
+enable_testing()
+add_test(NAME runtest COMMAND testAll)
 
 #----------------------
 #   DOC

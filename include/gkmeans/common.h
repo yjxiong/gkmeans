@@ -47,7 +47,7 @@ namespace gkmeans {
     ~GKMeans();
     inline static GKMeans& Get(){
       if (!singleton_){
-        singleton_.reset(new GKMeans);
+        singleton_.reset(new GKMeans());
       }
       return *singleton_;
     }
@@ -63,12 +63,14 @@ namespace gkmeans {
 
     inline static cublasHandle_t cublas_handle(){return Get().cublas_handle_;}
     inline static curandGenerator_t curand_generator(){return Get().curand_generator_;}
+    inline static cusparseHandle_t cusparse_handle(){return Get().cusparse_handle_;}
     inline static cudaStream_t stream(int i){return Get().cuda_streams_[i];}
     inline static const vector<cudaStream_t>& stream_vec(){return Get().cuda_streams_;}
 
   protected:
     cublasHandle_t cublas_handle_;
     curandGenerator_t curand_generator_;
+    cusparseHandle_t cusparse_handle_;
     vector<cudaStream_t> cuda_streams_;
 
     Phase phase_;

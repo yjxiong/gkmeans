@@ -19,21 +19,36 @@ namespace gkmeans{
       LOG(FATAL)<<"CURAND not available, will now halt";
     }
 
+    if (cusparseCreate(&cusparse_handle_) != CUSPARSE_STATUS_SUCCESS){
+      LOG(FATAL)<<"CUSPARSE not available, will now halt";
+    }
+
     /** Generally, we only need double buffer, so here we create two streams */
-    for (size_t i = 0; i < 2; ++i){
-      cudaStream_t s;
-      CUDA_CHECK(cudaStreamCreate(&s));
-      cuda_streams_.push_back(s);
+    cuda_streams_.resize(2);
+    for (size_t i = 0; i < cuda_streams_.size(); ++i){
+      CUDA_CHECK(cudaStreamCreate(&cuda_streams_[i]));
     }
 
   }
   GKMeans::~GKMeans(){
+
+    /**
+     * We should destroy the cuda streams in the de-constructor
+     * However, the cuda driver will be deconstructed first, which cause the commented function call to crash.
+     * So we comment out this part. But we should be aware that there are two streams to be release.
+     */
+    for (size_t i = 0; i < cuda_streams_.size(); ++i){
+      cudaStreamDestroy(cuda_streams_[i]);
+    }
+
+    // destroy cublas handler
     if (cublas_handle_) cublasDestroy(cublas_handle_);
+
+    // destroy curand generator
     if (curand_generator_) curandDestroyGenerator(curand_generator_);
 
-    for (size_t i = 0; i < cuda_streams_.size(); ++i){
-      CUDA_CHECK(cudaStreamDestroy(cuda_streams_[i]));
-    }
+    // destroy cusparse handle
+    if (cusparse_handle_) cusparseDestroy(cusparse_handle_);
 
   };
 

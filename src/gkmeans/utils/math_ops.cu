@@ -22,6 +22,8 @@ namespace gkmeans{
         N, a, b, y);
   }
 
+  template void gk_add<float>(const int N, const float *a, const float *b, float *y, cudaStream_t stream);
+
   template <typename Dtype>
   __global__ void scaler_pow_kernel(const int n, const Dtype *x, const Dtype alpha, Dtype *y);
 
@@ -43,5 +45,37 @@ namespace gkmeans{
   void gk_pow(const int N, const Dtype *X, const Dtype alpha, Dtype *Y, cudaStream_t stream){
     scaler_pow_kernel<Dtype><<<CUDA_GET_BLOCKS(N), CUDA_NUM_THREADS, 0, stream>>>(
         N, X, alpha, Y);
+  }
+
+  template void gk_pow<float>(const int N, const float *X, const float alpha, float *Y, cudaStream_t stream);
+  template void gk_pow<double>(const int N, const double *X, const double alpha, double *Y, cudaStream_t stream);
+
+
+  template <typename Dtype>
+  __global__ void rmin_kernel(const int M, const int N, const Dtype* data, int* max_idx, Dtype* max_val) {
+    CUDA_KERNEL_LOOP(row, M) {
+      Dtype* row_start = data + row * N;
+      Dtype v = row_start[0];
+      Dtype idx = 0;
+
+      //scan for max
+      for (int j = 0; j < N; ++j){
+        if (row_start[j] < v){
+          v = row_start[j];
+          idx = j;
+        }
+      }
+
+      //assign val to output
+      max_idx[row] = idx;
+      max_val[row] = v;
+    }
+  }
+
+  /** per row argmax and max with CUDA */
+  template <typename Dtype>
+  void gk_rmin(const int M, const int N, const Dtype* data, int* max_idx, Dtype* max_val, cudaStream_t stream){
+    rmin_kernel<Dtype><<<CUDA_GET_BLOCKS(M), CUDA_NUM_THREADS, 0, stream>>>(
+        M, N, data, max_idx, max_val);
   }
 }
