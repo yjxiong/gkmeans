@@ -25,7 +25,7 @@ namespace gkmeans{
     //do a new allocation when needed
     shape_ = shape;
     count_ = new_cnt;
-    mem_.reset(new Mem(count_, device_id_));
+    mem_.reset(new Mem(count_ * sizeof(Dtype), device_id_));
   }
 
   template class Mat<int>;

@@ -43,6 +43,9 @@ namespace gkmeans {
 
 }
 
+// CUDA: check for error after kernel execution and exit loudly if there is one.
+#define CUDA_POST_KERNEL_CHECK CUDA_CHECK(cudaPeekAtLastError())
+
 #define CUBLAS_SET_STREAM(stream) \
   CUBLAS_CHECK(cublasSetStream(GKMeans::cublas_handle(), stream))
 

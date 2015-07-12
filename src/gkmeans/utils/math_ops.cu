@@ -20,6 +20,7 @@ namespace gkmeans{
     // NOLINT_NEXT_LINE(whitespace/operators)
     scaler_add_kernel<Dtype><<<CUDA_GET_BLOCKS(N), CUDA_NUM_THREADS, 0, stream>>>(
         N, a, b, y);
+    CUDA_POST_KERNEL_CHECK;
   }
 
   template void gk_add<float>(const int N, const float *a, const float *b, float *y, cudaStream_t stream);
@@ -45,6 +46,7 @@ namespace gkmeans{
   void gk_pow(const int N, const Dtype *X, const Dtype alpha, Dtype *Y, cudaStream_t stream){
     scaler_pow_kernel<Dtype><<<CUDA_GET_BLOCKS(N), CUDA_NUM_THREADS, 0, stream>>>(
         N, X, alpha, Y);
+    CUDA_POST_KERNEL_CHECK;
   }
 
   template void gk_pow<float>(const int N, const float *X, const float alpha, float *Y, cudaStream_t stream);
@@ -79,6 +81,7 @@ namespace gkmeans{
   void gk_rmin(const int M, const int N, const Dtype* data, int* max_idx, Dtype* max_val, cudaStream_t stream){
     rmin_kernel<Dtype><<<CUDA_GET_BLOCKS(M), CUDA_NUM_THREADS, 0, stream>>>(
         M, N, data, max_idx, max_val);
+    CUDA_POST_KERNEL_CHECK;
   }
 
   template void gk_rmin<float>(const int M, const int N, const float* data, int* max_idx, float* max_val, cudaStream_t stream);

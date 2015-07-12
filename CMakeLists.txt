@@ -5,7 +5,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/CMake")
 
 ## Compiler settings
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -O2")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall")
 
 #----------------------
 #   Dependencies
@@ -39,7 +39,8 @@ set(TEST_SRC_DIR src/tests)
 #   Library
 #----------------------
 FILE(GLOB SRC_FILES ${SRC_DIR}/*.cpp
-                    ${SRC_DIR}/utils/*.cpp)
+                    ${SRC_DIR}/utils/*.cpp
+                    ${SRC_DIR}/functions/*.cpp)
 
 FILE(GLOB CU_SRC_FILES ${SRC_DIR}/*.cu
                        ${SRC_DIR}/utils/*.cu)

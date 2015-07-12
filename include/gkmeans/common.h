@@ -94,6 +94,11 @@ namespace gkmeans {
 #define idx3d(x1, x2, x3, dim1, dim2) \
   (x1 * dim1 + x2) * dim2 + x3
 
+
+#define INSTANTIATE_CLASS(classname) \
+  char gChar##classname; \
+  template class classname<float>
+
 #define GKMEANS_COMMON_H
 
 #endif //GKMEANS_COMMON_H
