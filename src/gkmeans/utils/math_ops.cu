@@ -54,7 +54,7 @@ namespace gkmeans{
   template <typename Dtype>
   __global__ void rmin_kernel(const int M, const int N, const Dtype* data, int* max_idx, Dtype* max_val) {
     CUDA_KERNEL_LOOP(row, M) {
-      Dtype* row_start = data + row * N;
+      const Dtype* row_start = data + row * N;
       Dtype v = row_start[0];
       Dtype idx = 0;
 
@@ -78,4 +78,6 @@ namespace gkmeans{
     rmin_kernel<Dtype><<<CUDA_GET_BLOCKS(M), CUDA_NUM_THREADS, 0, stream>>>(
         M, N, data, max_idx, max_val);
   }
+
+  template void gk_rmin<float>(const int M, const int N, const float* data, int* max_idx, float* max_val, cudaStream_t stream);
 }

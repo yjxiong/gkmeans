@@ -28,4 +28,7 @@ namespace gkmeans{
     mem_.reset(new Mem(count_, device_id_));
   }
 
+  template class Mat<int>;
+  template class Mat<float>;
+
 }

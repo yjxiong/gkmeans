@@ -56,7 +56,6 @@ namespace gkmeans{
     int device_id_;
   };
 
-  template class Mat<float>;
 }
 
 #endif //GKMEANS_MAT_H
