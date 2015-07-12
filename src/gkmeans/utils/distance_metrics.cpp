@@ -46,11 +46,12 @@ namespace gkmeans{
     //calculate norm of Y for rank-1 update
     gk_gemv<Dtype>(CUBLAS_OP_N, N, k, 1.0, buffer_Y2, buffer_ones, 0., buffer_norm, stream);
 
-    // conduct gemm
-    gk_gemm(CUBLAS_OP_N, CUBLAS_OP_T, M, N, k, Dtype(-2), X, Y,  Dtype(0.), buffer_XY, stream);
-    gk_ger(M, N, buffer_ones, buffer_norm, Dtype(1), buffer_XY, stream);
+    // conduct gemm, reverse the order of Y and X so that the result is in a column-major format
+    gk_gemm(CUBLAS_OP_N, CUBLAS_OP_T, N, M, k, Dtype(-2), Y, X,  Dtype(0.), buffer_XY, stream);
+    gk_ger(N, M, buffer_norm, buffer_ones, Dtype(1), buffer_XY, stream);
 
     //calculate the min for each row in the matrix
+    //This function inputs column-major matrix to achieve coalesced memory access
     gk_rmin(M, N, buffer_XY, DI, D, stream);
 
     //finally put the norms into the slots

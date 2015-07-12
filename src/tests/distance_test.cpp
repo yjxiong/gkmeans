@@ -67,23 +67,27 @@ namespace gkmeans {
       const Dtype* right_data = M_right->gpu_data();
 
       CUDA_CHECK(cudaStreamSynchronize(t0));
-      auto start = std::chrono::system_clock::now();
 
+      cudaEvent_t start, end;
+      CUDA_CHECK(cudaEventCreate(&start));
+      CUDA_CHECK(cudaEventCreate(&end));
+
+      cudaEventRecord(start);
       gk_euclidean_dist<Dtype>(M, N, K, left_data, right_data, result_data,
                       x2_data, y2_data, ones_data, norm_data,
                                t0);
-
-      CUDA_CHECK(cudaStreamSynchronize(t0));
-      cout<<"Total distance time: "
-        <<std::chrono::duration_cast<std::chrono::nanoseconds>(
-          std::chrono::system_clock::now() - start).count()/1000<<" us\n";
+      cudaEventRecord(end);
+      cudaEventSynchronize(end);
+      float ms;
+      CUDA_CHECK(cudaEventElapsedTime(&ms, start, end));
+      cout <<"All distance time: "<<ms<<" ms\n";
 
       M_result->to_cpu_async(t0);
 
       const Dtype* rst_data = M_result->cpu_data();
       for (size_t i = 0; i < M_result->shape(0); ++i){
         for (size_t j = 0; j < M_result->shape(1); ++j)
-          EXPECT_NEAR(rst_data[idx2d(i, j, N)], std::pow(float(j) - i, 2) * K, .1);
+          EXPECT_NEAR(rst_data[idx2d(i, j, N)], std::pow(float(j) - i, 2) * K, 10);
       }
 
     }
@@ -141,28 +145,32 @@ namespace gkmeans {
       const Dtype* left_data = M_left->gpu_data();
       const Dtype* right_data = M_right->gpu_data();
 
-      CUDA_CHECK(cudaStreamSynchronize(t0));
-      auto start = std::chrono::system_clock::now();
+      cudaEvent_t start, end;
+      CUDA_CHECK(cudaEventCreate(&start));
+      CUDA_CHECK(cudaEventCreate(&end));
+
+      cudaEventRecord(start);
 
       gk_shortest_euclidean_dist<Dtype>(M, N, K, left_data, right_data, index_data, result_data,
                                  x2_data, y2_data, ones_data, xy_data, norm_data,
                                  t0
       );
 
-      CUDA_CHECK(cudaStreamSynchronize(t0));
-      cout<<"Shotest distance time: "
-      <<std::chrono::duration_cast<std::chrono::nanoseconds>(
-          std::chrono::system_clock::now() - start).count()/1000<<" us\n";
+      cudaEventRecord(end);
+      cudaEventSynchronize(end);
+      float ms;
+      CUDA_CHECK(cudaEventElapsedTime(&ms, start, end));
+      cout <<"shotest distance time: "<<ms<<" ms\n";
 
       const int* cpu_result_index = M_index->cpu_data();
       const Dtype* cpu_result_data = M_result->cpu_data();
 
       for (size_t i = 0; i < M_index->count(); ++i){
         if (i < N) {
-          EXPECT_NEAR(0, cpu_result_data[i], 0.1);
+          EXPECT_NEAR(0, cpu_result_data[i], 1);
           EXPECT_EQ(int(i), cpu_result_index[i]);
         }else{
-          EXPECT_NEAR(cpu_result_data[i], std::pow(int(i - N)  + 1, 2) * K, 0.1);
+          EXPECT_NEAR(cpu_result_data[i], std::pow(int(i - N)  + 1, 2) * K, 10);
           EXPECT_EQ(int(N) - 1, cpu_result_index[i]);
         }
       }
@@ -176,9 +184,9 @@ namespace gkmeans {
 
     virtual void SetUp(){
 
-      M = 100;
-      N = 30;
-      K = 20;
+      M = 1000;
+      N = 300;
+      K = 50;
       M_left.reset(new Mat<Dtype>(vector<size_t >({M, K})));
       M_right.reset(new Mat<Dtype>(vector<size_t >({N, K})));
     }
