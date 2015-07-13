@@ -29,6 +29,9 @@ namespace gkmeans{
       CUDA_CHECK(cudaStreamCreate(&cuda_streams_[i]));
     }
 
+    /** Setupa default mat descriptor for cusparse */
+    CUSPARSE_CHECK(cusparseCreateMatDescr(&cusparse_descriptor_));
+
   }
   GKMeans::~GKMeans(){
 

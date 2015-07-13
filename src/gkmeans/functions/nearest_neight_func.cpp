@@ -68,6 +68,7 @@ namespace gkmeans{
     //Conduct shortest distance search
     gk_shortest_euclidean_dist<Dtype>(m_, n_, k_, x_data, y_data, DI_data, D_data,
                                       x2_data, y2_data, ones_data, xy_data, norm_data, stream);
+
   }
 
   INSTANTIATE_CLASS(NearestNeighborFunction);

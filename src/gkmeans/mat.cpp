@@ -14,7 +14,7 @@ namespace gkmeans{
     // set count
     count_ = 1;
     for(auto s : shape) count_*=s;
-    mem_.reset(new Mem(count_ * sizeof(Dtype), device_id_));
+    data_ptr_.reset(new Mem(count_ * sizeof(Dtype), device_id_));
   }
 
   template<typename Dtype>
@@ -25,7 +25,7 @@ namespace gkmeans{
     //do a new allocation when needed
     shape_ = shape;
     count_ = new_cnt;
-    mem_.reset(new Mem(count_ * sizeof(Dtype), device_id_));
+    data_ptr_.reset(new Mem(count_ * sizeof(Dtype), device_id_));
   }
 
   template class Mat<int>;

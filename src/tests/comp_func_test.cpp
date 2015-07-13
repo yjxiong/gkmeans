@@ -80,7 +80,7 @@ namespace gkmeans {
 
       //setup data
       M = 1000;
-      N = 200;
+      N = 300;
       K = 50;
 
       input_vecs_.push_back(new Mat<Dtype>(vector<size_t>({M, K})));
@@ -116,6 +116,94 @@ namespace gkmeans {
   }
 
   TYPED_TEST(NearestNeighborFunctionTest, ExecuteTest){
+    this->TestExecute();
+  }
+
+  template<typename TypeParam>
+  class CenterOfMassFunctionTest : public GKTest<TypeParam> {
+  public:
+    typedef TypeParam Dtype;
+    CenterOfMassFunctionTest() { };
+
+    void TestSetup(){
+      CenterOfMassFunction<Dtype> func;
+
+      func.SetUp(input_vecs_, output_vecs_);
+
+      CHECK_EQ(output_vecs_[0]->count(), N * K);
+    }
+
+    void TestExecute(){
+
+      cudaStream_t t0 = GKMeans::stream(0);
+
+      CenterOfMassFunction<Dtype> func;
+
+      func.SetUp(input_vecs_, output_vecs_);
+
+      //setup X data
+      Dtype* x_data = input_vecs_[0]->mutable_cpu_data();
+      for (size_t i = 0; i < M; ++i){
+        for (size_t j = 0; j < K; ++j){
+          x_data[idx2d(i, j, K)] = int(i);
+        }
+      }
+      input_vecs_[0]->to_gpu_async(t0);
+
+      int* di_data = (int*) input_vecs_[1]->mutable_cpu_data();
+
+      for (size_t i = 0; i < M; i++){
+        di_data[i] = (int)(i % N);
+      }
+      input_vecs_[1]->to_cpu_async(t0);
+
+      func.Execute(input_vecs_, output_vecs_, t0);
+
+      const Dtype* y_data = output_vecs_[0]->cpu_data();
+      for (size_t i = 0; i < N; ++i){
+        int count = 0;
+        for (size_t s = 0; s < M; s++) count += (s % N ==i)?s:0;
+        for (size_t j = 0; j < K; ++j){
+//          EXPECT_EQ(y_data[idx2d(i, j, K)], count);
+        }
+      }
+    }
+  protected:
+
+    virtual void SetUp(){
+
+      M = 10000;
+      N = 10000;
+      K = 1000;
+
+      input_vecs_.push_back(new Mat<Dtype>(vector<size_t>({M, K})));
+      input_vecs_.push_back(new Mat<Dtype>(vector<size_t>({M, 1})));
+      input_vecs_.push_back(new Mat<Dtype>(vector<size_t>({1})));
+
+      input_vecs_[2]->mutable_cpu_data()[0] = N;
+
+      output_vecs_.push_back(new Mat<Dtype>());
+
+    }
+
+    virtual void TearDown(){
+
+    }
+
+
+    vector<Mat<Dtype>* > input_vecs_;
+    vector<Mat<Dtype>* > output_vecs_;
+
+    size_t M, N, K;
+  };
+
+  TYPED_TEST_CASE(CenterOfMassFunctionTest, TestDtypes);
+
+  TYPED_TEST(CenterOfMassFunctionTest, TestFunctionSetup){
+    this->TestSetup();
+  }
+
+  TYPED_TEST(CenterOfMassFunctionTest, TestExecute){
     this->TestExecute();
   }
 }

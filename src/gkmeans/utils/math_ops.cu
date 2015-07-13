@@ -6,6 +6,7 @@
 #include "gkmeans/utils/cuda_utils.h"
 #include "gkmeans/utils/math_ops.h"
 #include "gkmeans/utils/cuda_utils.h"
+#include "../../../include/gkmeans/utils/cuda_utils.h"
 
 namespace gkmeans{
   template <typename Dtype>
@@ -85,4 +86,29 @@ namespace gkmeans{
   }
 
   template void gk_rmin<float>(const int M, const int N, const float* data, int* max_idx, float* max_val, cudaStream_t stream);
+
+
+  template <typename Dtype>
+  __global__ void isum_kernel(const int M, const int N, const int K, const Dtype* X, const int* DI, Dtype* Y, Dtype* ISum){
+    CUDA_KERNEL_LOOP(dim, K) {
+      for (int row = 0; row < M; ++row){
+        int data_index = row * K + dim;
+        int index = DI[row];
+        Y[index * K + dim] += X[data_index];
+
+        if (dim == 0) ISum[index] += 1;
+      }
+    }
+  }
+
+  /** indexed sum **/
+  template <typename Dtype>
+  void gk_isum(const int M, const int N, const int K, const Dtype* X, const int* DI,
+               Dtype* Y, Dtype* ISum, cudaStream_t stream){
+    isum_kernel<<<CUDA_GET_BLOCKS(K), CUDA_NUM_THREADS, 0, stream>>>(M, N, K, X, DI, Y, ISum);
+    CUDA_POST_KERNEL_CHECK;
+  }
+
+  template void gk_isum<float>(const int M, const int N, const int K, const float* X, const int* DI,
+                               float* Y, float* ISum, cudaStream_t stream);
 }

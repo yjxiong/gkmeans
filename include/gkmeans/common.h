@@ -22,6 +22,9 @@
 #include <curand.h>
 #include <cusparse.h>
 
+//thrust
+#include <thrust/device_vector.h>
+
 //glog for logging
 #include <glog/logging.h>
 
@@ -66,12 +69,14 @@ namespace gkmeans {
     inline static cusparseHandle_t cusparse_handle(){return Get().cusparse_handle_;}
     inline static cudaStream_t stream(int i){return Get().cuda_streams_[i];}
     inline static const vector<cudaStream_t>& stream_vec(){return Get().cuda_streams_;}
+    inline static cusparseMatDescr_t cusparse_descriptor(){return Get().cusparse_descriptor_;}
 
   protected:
     cublasHandle_t cublas_handle_;
     curandGenerator_t curand_generator_;
     cusparseHandle_t cusparse_handle_;
     vector<cudaStream_t> cuda_streams_;
+    cusparseMatDescr_t cusparse_descriptor_;
 
     Phase phase_;
 

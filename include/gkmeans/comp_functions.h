@@ -43,6 +43,8 @@ namespace gkmeans{
 
     virtual void Execute(const vector<Mat<Dtype> *>& input_mat_vec, const vector<Mat<Dtype> *>& output_mat_vec, cudaStream_t stream);
 
+
+
   protected:
 
     shared_ptr<Mat<Dtype>> buffer_X2_, buffer_Y2_, buffer_XY_, buffer_ones_, buffer_norm_;
@@ -62,8 +64,9 @@ namespace gkmeans{
      * @brief inputs 2 mats
      * 1. X
      * 2. Assignment matrix, DI
+     * 3. A one item matrix holding the number of clusters
      */
-    inline virtual const int NumInputs(){return 2;}
+    inline virtual const int NumInputs(){return 3;}
 
     /**
      * @brief outputs 1 mats
@@ -77,8 +80,17 @@ namespace gkmeans{
 
     virtual void Execute(const vector<Mat<Dtype> *>& input_mat_vec, const vector<Mat<Dtype> *>& output_mat_vec, cudaStream_t stream);
 
+    void kernelExecute(const vector<Mat<Dtype> *>& input_mat_vec, const vector<Mat<Dtype> *>& output_mat_vec, cudaStream_t stream);
+    void cusparseExecute(const vector<Mat<Dtype> *>& input_mat_vec, const vector<Mat<Dtype> *>& output_mat_vec, cudaStream_t stream);
+
   protected:
-    shared_ptr<Mat<Dtype>> buffer_temp_center_;
+    shared_ptr<Mat<Dtype>> buffer_row_idx_, buffer_transpose_;
+    shared_ptr<Mat<Dtype>> buffer_trans_row_idx_, buffer_trans_col_idx_, buffer_ones_, buffer_trans_Y_;
+
+    shared_ptr<Mat<Dtype>> buffer_isum_;
+
+    size_t m_, n_, k_;
+
   };
 }
 

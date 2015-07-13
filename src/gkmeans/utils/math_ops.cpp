@@ -65,4 +65,46 @@ namespace gkmeans{
     CUBLAS_SET_STREAM(stream);
     CUBLAS_CHECK(cublasSger(GKMeans::cublas_handle(), N, M, &alpha, y, 1, x, 1, A, N ));
   }
+
+  /**
+   * sparse matrix multiplication, used for updating cluster center
+   * WARNING: Output of this function is a column-major matrix.
+   * */
+  template <>
+  void gk_sparse_gemm2<float>(const cusparseOperation_t TransA, const cusparseOperation_t TransB,
+                       const int M, const int N, const int K, const int NNZ,
+                       const float alpha, const float* dataA, const int* rowPtrA, const int *colIdxA,
+                       const float* B, const float beta, float* C, cudaStream_t stream){
+
+    //since our dense matrix is in row-major format, we need to reverse the tranpose paramter here
+    cusparseOperation_t transB = (TransB == CUSPARSE_OPERATION_NON_TRANSPOSE)?
+                                 CUSPARSE_OPERATION_TRANSPOSE:CUSPARSE_OPERATION_NON_TRANSPOSE;
+    cusparseOperation_t transA = TransA;
+
+    if ((transA==CUSPARSE_OPERATION_TRANSPOSE) && (transB==CUSPARSE_OPERATION_TRANSPOSE)){
+      LOG(FATAL)<<"Trans(A)*Trans(B) is not supported by cusparse, will now halt";
+    }
+
+    int ldb = (TransB == CUSPARSE_OPERATION_NON_TRANSPOSE) ? N : K;
+    int ldc = (TransA == CUSPARSE_OPERATION_NON_TRANSPOSE) ? M : K;
+    CUSPARSE_CHECK(cusparseSetStream(GKMeans::cusparse_handle(), stream));
+    CUSPARSE_CHECK(cusparseScsrmm2(GKMeans::cusparse_handle(), transA, transB, M, N, K, NNZ, &alpha,
+                                   GKMeans::cusparse_descriptor(), dataA, rowPtrA, colIdxA,
+                                   B, ldb, &beta, C, ldc));
+
+  }
+
+  /**
+   * Transpose a CSC sparse matrix
+   */
+  template <>
+  void gk_csr2csc<float>(const int M, const int N, const int NNZ,
+                  const float* csrData, const int * csrRowPtr, const int* csrColInd,
+                         float* cscData, int* cscRowInd, int* cscColPtr, cudaStream_t stream){
+    CUSPARSE_CHECK(cusparseSetStream(GKMeans::cusparse_handle(), stream));
+    CUSPARSE_CHECK(cusparseScsr2csc(GKMeans::cusparse_handle(), M, N, NNZ,
+                   csrData, csrRowPtr, csrColInd,
+                   cscData, cscRowInd, cscColPtr,
+                   CUSPARSE_ACTION_SYMBOLIC, CUSPARSE_INDEX_BASE_ZERO));
+  }
 }

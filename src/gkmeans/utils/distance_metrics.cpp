@@ -36,8 +36,7 @@ namespace gkmeans{
                                   cudaStream_t stream);
 
   template<typename Dtype>
-  void gk_shortest_euclidean_dist(int M, int N, int k, const Dtype* X,
-                                  const Dtype* Y, int* DI, Dtype* D,
+  void gk_shortest_euclidean_dist(int M, int N, int k, const Dtype* X, const Dtype* Y, int* DI, Dtype* D,
                                   Dtype* buffer_X2, Dtype* buffer_Y2,
                                   const Dtype* buffer_ones, Dtype* buffer_XY, Dtype* buffer_norm,
                                   cudaStream_t stream){
