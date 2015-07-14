@@ -65,6 +65,15 @@ namespace gkmeans {
   void gk_csr2csc(const int M, const int N, const int NNZ,
                   const Dtype* csrData, const int * csrRowPtr, const int* csrColInd,
                   Dtype* cscData, int* cscRowInd, int* cscColPtr, cudaStream_t stream);
+
+  template<typename Dtype>
+  void gk_gpu_set(const size_t Count, Dtype* data, int val, cudaStream_t stream){
+    if (val == 0){
+      CUDA_CHECK(cudaMemsetAsync(data, 0, Count*sizeof(Dtype), stream));
+    }else{
+      NOT_IMPLEMENTED;
+    }
+  }
 }
 
 #endif //GKMEANS_MATH_OPS_H

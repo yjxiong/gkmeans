@@ -164,17 +164,19 @@ namespace gkmeans {
         int count = 0;
         for (size_t s = 0; s < M; s++) count += (s % N ==i)?s:0;
         for (size_t j = 0; j < K; ++j){
-//          EXPECT_EQ(y_data[idx2d(i, j, K)], count);
+          EXPECT_EQ(y_data[idx2d(i, j, K)], count);
+//          cout<<y_data[idx2d(i, j, K)]<<" ";
         }
+//        cout<<"\n";
       }
     }
   protected:
 
     virtual void SetUp(){
 
-      M = 10000;
-      N = 10000;
-      K = 1000;
+      M = 1000;
+      N = 300;
+      K = 50;
 
       input_vecs_.push_back(new Mat<Dtype>(vector<size_t>({M, K})));
       input_vecs_.push_back(new Mat<Dtype>(vector<size_t>({M, 1})));
@@ -182,6 +184,7 @@ namespace gkmeans {
 
       input_vecs_[2]->mutable_cpu_data()[0] = N;
 
+      output_vecs_.push_back(new Mat<Dtype>());
       output_vecs_.push_back(new Mat<Dtype>());
 
     }

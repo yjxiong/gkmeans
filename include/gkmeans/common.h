@@ -14,6 +14,7 @@
 #include <set>
 #include <utility>
 #include <algorithm>
+#include <thread>
 
 //include CUDA libraries
 #include <cublas_v2.h>
@@ -41,6 +42,7 @@ using std::ofstream;
 using std::map;
 using std::make_pair;
 using std::set;
+using std::string;
 
 namespace gkmeans {
   //common code here
@@ -103,6 +105,9 @@ namespace gkmeans {
 #define INSTANTIATE_CLASS(classname) \
   char gChar##classname; \
   template class classname<float>
+
+#define NOT_IMPLEMENTED \
+  LOG(FATAL)<<"operation not implemented!"
 
 #define GKMEANS_COMMON_H
 

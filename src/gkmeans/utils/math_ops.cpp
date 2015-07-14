@@ -107,4 +107,7 @@ namespace gkmeans{
                    cscData, cscRowInd, cscColPtr,
                    CUSPARSE_ACTION_SYMBOLIC, CUSPARSE_INDEX_BASE_ZERO));
   }
+
+  template  void gk_gpu_set<float>(const size_t Count, float* data, int val, cudaStream_t stream);
+
 }
