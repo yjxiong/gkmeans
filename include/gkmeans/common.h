@@ -73,6 +73,10 @@ namespace gkmeans {
     inline static const vector<cudaStream_t>& stream_vec(){return Get().cuda_streams_;}
     inline static cusparseMatDescr_t cusparse_descriptor(){return Get().cusparse_descriptor_;}
 
+    inline static string get_config(string key){return Get().configs_[key];}
+    inline static void set_config(string key, string value){ Get().configs_[key] = value;}
+
+
   protected:
     cublasHandle_t cublas_handle_;
     curandGenerator_t curand_generator_;
@@ -81,9 +85,9 @@ namespace gkmeans {
     cusparseMatDescr_t cusparse_descriptor_;
 
     Phase phase_;
+    map<string, string> configs_;
 
     static shared_ptr<GKMeans> singleton_;
-
 
   private:
     //disable copy and sign constructor

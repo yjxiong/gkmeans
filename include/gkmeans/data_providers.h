@@ -8,6 +8,7 @@
 #include "gkmeans/common.h"
 #include "gkmeans/functions.h"
 #include "gkmeans/mat.h"
+#include "H5Cpp.h"
 
 #include <deque>
 #include <future>
@@ -25,14 +26,15 @@ namespace gkmeans{
   public:
 
     DataProviderBase(cudaStream_t stream)
-        :data_stream_(stream), slot_size_(2){};
+        :data_stream_(stream), slot_size_(2),
+         current_index_(0){};
 
     virtual ~DataProviderBase(){
       if (num_future_.valid()){
         num_future_.get();
       }
 
-      for (int i = 0; i < slot_size_; ++i){
+      for (size_t i = 0; i < slot_size_; ++i){
         delete data_slot_vec_[i];
       }
     }
@@ -42,7 +44,7 @@ namespace gkmeans{
     /**
      * @brief the exposed interface to get ready to process data
      */
-    Mat<Dtype>* GetData(int& num);
+    Mat<Dtype>* GetData(size_t& num);
 
     /**
      * @brief exposed setup function
@@ -52,8 +54,8 @@ namespace gkmeans{
     /**
      * @brief Async function to prefetch the data
      */
-    inline int AsyncFunc(Mat<Dtype> * output_mat){
-      int num = this->PrepareData(output_mat);
+    inline size_t AsyncFunc(Mat<Dtype> * output_mat){
+      size_t num = this->PrepareData(output_mat);
       output_mat->to_gpu_async(data_stream_);
       return num;
     }
@@ -69,7 +71,7 @@ namespace gkmeans{
     /**
      * @brief prepare the data and return the number of this batch
      */
-    virtual int PrepareData(Mat<Dtype> * output_mat) = 0;
+    virtual size_t PrepareData(Mat<Dtype> * output_mat) = 0;
 
 
     /**
@@ -81,9 +83,12 @@ namespace gkmeans{
       }
     }
 
+    inline size_t round_size(){return round_size_;}
+    inline size_t current_index(){return current_index_;}
+
   protected:
 
-    future<int> num_future_;
+    future<size_t> num_future_;
     cudaStream_t data_stream_;
 
     /**
@@ -91,8 +96,11 @@ namespace gkmeans{
      * Usually we have two slots, one serving the functions and one getting filled by PrepareData()
      */
     vector<Mat<Dtype>* > data_slot_vec_;
-    int slot_size_;
-    deque<int> data_q_;
+    size_t slot_size_;
+    deque<size_t> data_q_;
+
+    size_t round_size_;
+    size_t current_index_;
 
   };
 
@@ -112,13 +120,40 @@ namespace gkmeans{
       Mat<Dtype>* mat_ptr = new Mat<Dtype>(vector<size_t>({n}));
       return mat_ptr;
     }
-    virtual int PrepareData(Mat<Dtype> * output_mat){
+    virtual size_t PrepareData(Mat<Dtype> * output_mat){
       output_mat->mutable_cpu_data()[0] = invoke_count_;
       invoke_count_++;
       return 1;
     }
   protected:
     int invoke_count_;
+  };
+
+  /**
+   * @brief a dummy data provider doing nothing
+   */
+  template <typename Dtype>
+  class HDF5DataProvider: public DataProviderBase<Dtype>{
+  public:
+
+    explicit HDF5DataProvider(cudaStream_t stream)
+        : DataProviderBase<Dtype>(stream){}
+
+    virtual ~HDF5DataProvider();
+
+    virtual Mat<Dtype>* DataSetUp();
+    virtual size_t PrepareData(Mat<Dtype> * output_mat);
+  protected:
+    shared_ptr<H5::H5File> h5_file_;
+    H5::DataSet h5_dataset_;
+    H5::DataSpace h5_data_space_;
+    H5::DataSpace h5_mem_space_;
+
+    vector<hsize_t> dataset_dims_;
+    vector<hsize_t> mem_dims_;
+    vector<hsize_t> offset_;
+
+    size_t batch_size_;
   };
 }
 

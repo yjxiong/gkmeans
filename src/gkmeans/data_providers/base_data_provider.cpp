@@ -14,7 +14,7 @@ namespace gkmeans{
    * This function will initial a
    */
   template <typename Dtype>
-  Mat<Dtype>* DataProviderBase<Dtype>::GetData(int &num){
+  Mat<Dtype>* DataProviderBase<Dtype>::GetData(size_t &num){
 
     //first join the async task
     num = num_future_.get();
@@ -39,7 +39,7 @@ namespace gkmeans{
   Mat<Dtype>* DataProviderBase<Dtype>::SetUp(){
     Mat<Dtype>* data_mat = this->DataSetUp();
 
-    for (int i = 0; i < slot_size_; ++i){
+    for (size_t i = 0; i < slot_size_; ++i){
 
       //duplicate the output mat for `slot_size_` times
       Mat<Dtype>* mat_ptr = (i == 0)?
