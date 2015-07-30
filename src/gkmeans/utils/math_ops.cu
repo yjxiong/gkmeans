@@ -111,4 +111,24 @@ namespace gkmeans{
 
   template void gk_isum<float>(const int M, const int N, const int K, const float* X, const int* DI,
                                float* Y, float* ISum, cudaStream_t stream);
+
+
+  template <typename Dtype>
+  __global__ void bdiv_kernel(const int N, const int K, const Dtype* Y, const Dtype* ISum, Dtype* dst){
+    CUDA_KERNEL_LOOP(dim, K) {
+      for (int row = 0; row < N; ++row){
+        int data_index = row * K + dim;
+        dst[data_index] = Y[data_index] / ISum[row];
+      }
+    }
+  }
+
+  /**broadcasted division*/
+  template <typename Dtype>
+  void gk_bdiv(const int N, const int K, const Dtype* Y, const Dtype* ISum, Dtype* dst, cudaStream_t stream){
+    bdiv_kernel<<<CUDA_GET_BLOCKS(K), CUDA_NUM_THREADS, 0, stream>>>(N, K, Y, ISum, dst);
+    CUDA_POST_KERNEL_CHECK;
+  }
+
+  template void gk_bdiv<float>(const int N, const int K, const float* Y, const float* ISum, float* dst, cudaStream_t stream);
 }

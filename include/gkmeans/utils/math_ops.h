@@ -60,6 +60,10 @@ namespace gkmeans {
   void gk_isum(const int M, const int N, const int K, const Dtype* X, const int* DI,
                Dtype* Y, Dtype* ISum, cudaStream_t stream);
 
+  /**broadcasted division*/
+  template <typename Dtype>
+  void gk_bdiv(const int N, const int K, const Dtype* Y, const Dtype* DI, Dtype* dst, cudaStream_t stream);
+
 
   template <typename Dtype>
   void gk_csr2csc(const int M, const int N, const int NNZ,

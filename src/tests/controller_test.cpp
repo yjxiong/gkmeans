@@ -68,6 +68,52 @@ namespace gkmeans {
 
     }
 
+    void TestKMeansSeed() {
+      KMeansController<Dtype> controller;
+      controller.SetUp();
+
+      controller.Seed();
+
+      Mat<Dtype>* mat = controller.mats()[1];
+
+      const Dtype* y_data = mat->cpu_data();
+      for (int i = 0; i < 10; ++i){
+        const Dtype* data = controller.data_providers()[0]->DirectAccess(pseudo_random_seq_[i]);
+        for (int col = 0; col < 10; ++col){
+          EXPECT_EQ(data[col], y_data[col + i * 20]);
+        }
+      }
+    }
+
+    void TestKmeansSolve() {
+      KMeansController<Dtype> controller;
+      controller.SetUp();
+
+      controller.Solve(1); //do one iteration
+
+      Mat<Dtype>* center_mat = controller.mats()[1];
+
+      const Dtype* center_data = center_mat->cpu_data();
+
+      float results[] = {16.5000000000000,
+          90,
+          26.5000000000000,
+          77,
+          7,
+          71,
+          65,
+          20.50000,
+          37.5000000000000,
+          53};
+
+      EXPECT_NEAR(center_data[0], results[0], 0.1);
+      EXPECT_NEAR(center_data[1 * 20], results[1], 0.1);
+      EXPECT_NEAR(center_data[4 * 20], results[4], 0.1);
+
+      controller.data_providers()[0]->EndPrefetching();
+
+    }
+
   protected:
 
     void SetUp(){
@@ -76,13 +122,22 @@ namespace gkmeans {
       GKMeans::set_config("data_name", "data");
       GKMeans::set_config("batch_size", "20");
       GKMeans::set_config("n_cluster", "10");
+      GKMeans::set_config("random_seed", "1");
+
+      pseudo_random_seq_.resize(100);
+      std::iota(pseudo_random_seq_.begin(), pseudo_random_seq_.end(), 0);
+
+      std::default_random_engine engine;
+      engine.seed(1);
+      std::shuffle(pseudo_random_seq_.begin(), pseudo_random_seq_.end(), engine);
     }
 
     void TearDown(){
 
     }
 
-    size_t M_ = 10;
+    vector<int> pseudo_random_seq_;
+
   };
 
   TYPED_TEST_CASE(KMeansControllerTest, TestDtypes);
@@ -92,10 +147,10 @@ namespace gkmeans {
   }
 
   TYPED_TEST(KMeansControllerTest, TestSeed){
-
+    this->TestKMeansSeed();
   }
 
   TYPED_TEST(KMeansControllerTest, TestRun){
-
+    this->TestKmeansSolve();
   }
 }

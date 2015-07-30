@@ -43,16 +43,12 @@ namespace gkmeans{
       const vector<Mat<Dtype> *>& input_mat_vec, const vector<Mat<Dtype> *>& output_mat_vec, cudaStream_t stream
   ){
     const Dtype* x_data = input_mat_vec[0]->gpu_data();
-    const int* di_data = (int*)input_mat_vec[1]->gpu_data();
-    Dtype* y_data = buffer_y_->mutable_gpu_data();
-    Dtype* isum_data = buffer_isum_->mutable_gpu_data();
+    const int* di_data = (int*) input_mat_vec[1]->gpu_data();
 
     //run indexed sum
-    gk_isum(m_, n_, k_, x_data, di_data, y_data, isum_data, stream);
+    gk_isum(m_, n_, k_, x_data, di_data, output_mat_vec[0]->mutable_gpu_data(), output_mat_vec[1]->mutable_gpu_data(), stream);
 
-    gk_axpby(buffer_y_->count(), Dtype(1), y_data, Dtype(1), output_mat_vec[0]->mutable_gpu_data(), stream);
-    gk_axpby(buffer_isum_->count(), Dtype(1), isum_data, Dtype(1), output_mat_vec[1]->mutable_gpu_data(), stream);
-
+    CUDA_CHECK(cudaStreamSynchronize(stream)); // seem to be causing trouble if we don't do this.
   }
 
   INSTANTIATE_CLASS(CenterOfMassFunction);

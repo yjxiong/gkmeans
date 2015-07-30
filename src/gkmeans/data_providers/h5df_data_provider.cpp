@@ -39,12 +39,15 @@ namespace gkmeans {
 
     row_dims_ = mem_dims_;
     row_dims_[0] = 1;
+    h5_direct_access_mem_space_ = H5::DataSpace(rank, row_dims_.data());
 
     /** Setup offset */
     offset_.resize(rank);
     offset_.assign(rank, 0);
     direct_access_offset_.resize(rank);
     direct_access_offset_.assign(rank, 0);
+    zero_offset_.resize(rank);
+    zero_offset_.assign(rank, 0);
 
 
     /** setup output mat */
@@ -71,15 +74,16 @@ namespace gkmeans {
     /** first determine the number of samples in this batch */
     size_t this_batch = std::min(batch_size_, (this->round_size_ - this->current_index_));
 
-    /** read data **/
+    /** read data */
     offset_[0] = this->current_index_;
     h5_data_space_.selectHyperslab(H5S_SELECT_SET, mem_dims_.data(), offset_.data());
+    h5_mem_space_.selectHyperslab(H5S_SELECT_SET, mem_dims_.data(), zero_offset_.data());
     h5_dataset_.read(output_mat->mutable_cpu_data(), H5::PredType::NATIVE_FLOAT, h5_mem_space_, h5_data_space_);
 
     /** post-processing */
-    this->current_index_ += this_batch;
-    if (this->current_index_ == this->round_size_){
-      this->current_index_ = 0; // rewind if neccesary
+    this->prefetch_index_ += this_batch;
+    if (this->prefetch_index_ == this->round_size_){
+      this->prefetch_index_ = 0; // rewind if neccesary
     }
 
     return this_batch;
@@ -95,7 +99,9 @@ namespace gkmeans {
     Dtype* data = direct_access_mat_->mutable_cpu_data();
     direct_access_offset_[0] = index;
     h5_direct_access_space_.selectHyperslab(H5S_SELECT_SET, row_dims_.data(), direct_access_offset_.data());
-    h5_dataset_.read(data, H5::PredType::NATIVE_FLOAT, h5_direct_access_space_, h5_data_space_);
+    h5_direct_access_mem_space_.selectHyperslab(H5S_SELECT_SET, row_dims_.data(), zero_offset_.data());
+    h5_mem_space_.selectHyperslab(H5S_SELECT_SET, row_dims_.data(), zero_offset_.data());
+    h5_dataset_.read(data, H5::PredType::NATIVE_FLOAT, h5_direct_access_mem_space_, h5_direct_access_space_);
     return data;
   }
 

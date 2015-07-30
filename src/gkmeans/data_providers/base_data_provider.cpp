@@ -19,6 +19,9 @@ namespace gkmeans{
     //first join the async task
     num = num_future_.get();
 
+    //also sync the cuda strea
+    CUDA_CHECK(cudaStreamSynchronize(data_stream_));
+
     // get the mat with data filled
     int ready_idx = data_q_.front();
     Mat<Dtype>* ready_mat = data_slot_vec_[ready_idx];
@@ -31,6 +34,11 @@ namespace gkmeans{
 
     // kickout async task (force async launch)
     num_future_ = std::async(std::launch::async, &DataProviderBase::AsyncFunc, this, working_mat);
+
+    current_index_ += num;
+    if (current_index_ == round_size_){
+      current_index_ = 0;
+    }
 
     return ready_mat;
   }

@@ -27,7 +27,7 @@ namespace gkmeans{
 
     DataProviderBase(cudaStream_t stream)
         :data_stream_(stream), slot_size_(2),
-         current_index_(0){};
+         current_index_(0), prefetch_index_(0){};
 
     virtual ~DataProviderBase(){
       if (num_future_.valid()){
@@ -106,6 +106,7 @@ namespace gkmeans{
 
     size_t round_size_;
     size_t current_index_;
+    size_t prefetch_index_;
 
   };
 
@@ -161,8 +162,10 @@ namespace gkmeans{
     vector<hsize_t> offset_;
 
     vector<hsize_t> direct_access_offset_;
+    vector<hsize_t> zero_offset_;
     vector<hsize_t> row_dims_;
     H5::DataSpace h5_direct_access_space_;
+    H5::DataSpace h5_direct_access_mem_space_;
     shared_ptr<Mat<Dtype>> direct_access_mat_;
 
 

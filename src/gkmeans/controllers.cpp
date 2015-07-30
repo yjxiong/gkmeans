@@ -6,6 +6,7 @@
 #include "gkmeans/functions.h"
 #include "gkmeans/controllers.h"
 #include "gkmeans/data_providers.h"
+#include "gkmeans/utils/math_ops.h"
 
 
 namespace gkmeans{
@@ -45,6 +46,7 @@ namespace gkmeans{
     this->registerMatName("X");
     this->markMat(input_0, input_id_0);
     this->markMat(input_1, input_id_1);
+    batch_size_ = source_mat->shape(0);
 
     this->mats_.push_back(new Mat<Dtype>());
     this->registerMatName("Y_old");
@@ -99,19 +101,23 @@ namespace gkmeans{
 
   template<typename Dtype>
   void KMeansController<Dtype>::Seed(){
-    string seed_type = GKMeans::get_config("seed_type");
+    string seeding_type = GKMeans::get_config("seeding_type");
+    string random_seed_string = GKMeans::get_config("random_seed");
 
-    if ((seed_type == "random") ||(seed_type == "")){
+    if ((seeding_type == "random") ||(seeding_type == "")){
       // use random seeding
       vector<size_t> src;
-      src.resize(N_);
+      src.resize(M_);
       std::iota(src.begin(), src.end(), 0);
       std::default_random_engine engine;
+      if (random_seed_string != ""){
+        engine.seed(std::stoul(random_seed_string));
+      }
       std::shuffle(src.begin(), src.end(), engine);
 
       Dtype* y_data = this->mats_[1]->mutable_cpu_data();
       for(size_t i = 0; i < N_; ++i){
-        Dtype* row_data = this->data_providers_[0]->DirectAccess(i);
+        Dtype* row_data = this->data_providers_[0]->DirectAccess(src[i]);
         std::memcpy(y_data, row_data, K_ * sizeof(Dtype));
         y_data += K_;
       }
@@ -120,30 +126,56 @@ namespace gkmeans{
 
   template<typename Dtype>
   void KMeansController<Dtype>::Step(){
-    bool started = false;
+    /** one iteration includes maximization and estimation**/
+    bool iter_finised = false;
+    gk_gpu_set(this->mats_[4]->count(), this->mats_[4]->mutable_gpu_data(), 0, GKMeans::stream(0));
+    gk_gpu_set(this->mats_[5]->count(), this->mats_[5]->mutable_gpu_data(), 0, GKMeans::stream(0));
+    while (!iter_finised){
+      size_t batch_num = 0;
+      Mat<Dtype>* batch_mat = this->data_providers_[0]->GetData(batch_num);
+      CHECK_EQ(batch_num, batch_size_);
 
-    for (int iteration = 0; iteration < 10; ++iteration){
-      /** one iteration includes maximization and estimation**/
-      bool iter_finised = false;
-      //TODO: maximization
-      while (!iter_finised){
-        int batch_num = 0;
-        Mat<Dtype>* batch_data = this->data_providers[0]->GetData(batch_num);
 
-        if ( this->data_provider[0]->current_index()  == 0){
-          iter_finised = true;
-          //execute functions
-        }
+      if ( this->data_providers_[0]->current_index()  == 0){
+        iter_finised = true;
       }
-      //TODO: esitimization
+      //execute functions
+      this->mats_[0] = batch_mat;
+      this->function_input_vecs_[0][0] = batch_mat;
+
+      //run forward
+      for (int i = 0; i < this->funcs_.size(); ++i){
+        this->funcs_[i]->Execute(this->function_input_vecs_[i], this->function_output_vecs_[i], GKMeans::stream(0));
+      }
+
 
     }
 
+    //put the result to the Y_old
+    gk_bdiv<Dtype>(this->N_, this->K_, this->mats_[4]->gpu_data(),
+                   this->mats_[5]->gpu_data(), this->mats_[1]->mutable_gpu_data(),
+                   GKMeans::stream(0));
   }
 
   template<typename Dtype>
   void KMeansController<Dtype>::PostProcess(){
-    /** Run processing of cluster centers **/
+    /** Use the cluster center calculated to get cluster labels**/
+    bool assignment_finished = false;
+    while (!assignment_finished){
+      size_t batch_num = 0;
+      Mat<Dtype>* batch_mat = this->data_providers_[0]->GetData(batch_num);
+      if ( this->data_providers_[0]->current_index()  == 0){
+        assignment_finished = true;
+      }
+      //execute only the maximization functions for all samples
+      this->mats_[0] = batch_mat;
+      this->function_input_vecs_[0][0] = batch_mat;
+
+      this->funcs_[0]->Execute(this->function_input_vecs_[0], this->function_output_vecs_[0], GKMeans::stream(0));
+
+      //TODO: copy out results
+    }
+
   }
 
   INSTANTIATE_CLASS(KMeansController);
