@@ -178,11 +178,11 @@ namespace gkmeans {
       N = 300;
       K = 50;
 
+      GKMeans::set_config("n_cluster", std::to_string(N));
+
       input_vecs_.push_back(new Mat<Dtype>(vector<size_t>({M, K})));
       input_vecs_.push_back(new Mat<Dtype>(vector<size_t>({M, 1})));
-      input_vecs_.push_back(new Mat<Dtype>(vector<size_t>({1})));
-
-      input_vecs_[2]->mutable_cpu_data()[0] = N;
+      input_vecs_.push_back(new Mat<Dtype>(vector<size_t>({M, 1})));
 
       output_vecs_.push_back(new Mat<Dtype>());
       output_vecs_.push_back(new Mat<Dtype>());

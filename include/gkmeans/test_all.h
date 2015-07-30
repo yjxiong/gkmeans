@@ -15,7 +15,7 @@ namespace gkmeans{
     typedef TypeParam Dtype;
   protected:
     GKTest() {
-      cudaSetDevice(2);
+      cudaSetDevice(0);
     }
     virtual ~GKTest() {}
   };

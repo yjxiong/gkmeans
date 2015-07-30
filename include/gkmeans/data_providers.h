@@ -83,6 +83,11 @@ namespace gkmeans{
       }
     }
 
+    /**
+     * @brief directly get the i-th sample
+     */
+    virtual Dtype* DirectAccess(size_t index){return NULL;};
+
     inline size_t round_size(){return round_size_;}
     inline size_t current_index(){return current_index_;}
 
@@ -143,6 +148,8 @@ namespace gkmeans{
 
     virtual Mat<Dtype>* DataSetUp();
     virtual size_t PrepareData(Mat<Dtype> * output_mat);
+
+    virtual Dtype* DirectAccess(size_t index);
   protected:
     shared_ptr<H5::H5File> h5_file_;
     H5::DataSet h5_dataset_;
@@ -152,6 +159,12 @@ namespace gkmeans{
     vector<hsize_t> dataset_dims_;
     vector<hsize_t> mem_dims_;
     vector<hsize_t> offset_;
+
+    vector<hsize_t> direct_access_offset_;
+    vector<hsize_t> row_dims_;
+    H5::DataSpace h5_direct_access_space_;
+    shared_ptr<Mat<Dtype>> direct_access_mat_;
+
 
     size_t batch_size_;
   };

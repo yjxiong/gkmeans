@@ -18,7 +18,7 @@ namespace gkmeans{
     m_ = input_mat_vec[0]->shape(0);
     k_ = input_mat_vec[0]->shape(1);
     CHECK_EQ(input_mat_vec[1]->count(), m_);
-    n_ = (size_t)(input_mat_vec[2]->cpu_data()[0]);
+    n_ = std::stoul(GKMeans::get_config("n_cluster"));
 
     // shape the local buffer
     buffer_y_.reset(new Mat<Dtype>(vector<size_t>({n_, k_})));

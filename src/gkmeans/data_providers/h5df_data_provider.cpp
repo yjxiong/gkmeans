@@ -23,6 +23,7 @@ namespace gkmeans {
     h5_file_.reset(new H5::H5File(file_name.c_str(), H5F_ACC_RDONLY));
     h5_dataset_ = h5_file_->openDataSet(data_name.c_str());
     h5_data_space_ = h5_dataset_.getSpace();
+    h5_direct_access_space_ = h5_dataset_.getSpace();
     size_t rank = h5_data_space_.getSimpleExtentNdims();
 
     CHECK_EQ(rank, 2)<<"Currently only support 2 dimensional matrix data";
@@ -36,9 +37,15 @@ namespace gkmeans {
     mem_dims_[0] = batch_size_; // memory buffer should have the same size of the batch_size_
     h5_mem_space_ = H5::DataSpace(rank, mem_dims_.data());
 
+    row_dims_ = mem_dims_;
+    row_dims_[0] = 1;
+
     /** Setup offset */
     offset_.resize(rank);
     offset_.assign(rank, 0);
+    direct_access_offset_.resize(rank);
+    direct_access_offset_.assign(rank, 0);
+
 
     /** setup output mat */
     vector<size_t> mat_dims;
@@ -46,6 +53,9 @@ namespace gkmeans {
       mat_dims.push_back(mem_dims_[i]);
     }
     Mat<Dtype>* mat = new Mat<Dtype>(mat_dims);
+
+    direct_access_mat_.reset(new Mat<Dtype>(vector<size_t>(mat_dims.begin() + 1, mat_dims.end())));
+
 
     /** try read one part of the dataset*/
     h5_data_space_.selectHyperslab(H5S_SELECT_SET, mem_dims_.data(), offset_.data());
@@ -78,6 +88,15 @@ namespace gkmeans {
   template <typename Dtype>
   HDF5DataProvider<Dtype>::~HDF5DataProvider(){
     h5_file_.reset();
+  }
+
+  template<typename Dtype>
+  Dtype* HDF5DataProvider<Dtype>::DirectAccess(size_t index){
+    Dtype* data = direct_access_mat_->mutable_cpu_data();
+    direct_access_offset_[0] = index;
+    h5_direct_access_space_.selectHyperslab(H5S_SELECT_SET, row_dims_.data(), direct_access_offset_.data());
+    h5_dataset_.read(data, H5::PredType::NATIVE_FLOAT, h5_direct_access_space_, h5_data_space_);
+    return data;
   }
 
   INSTANTIATE_CLASS(HDF5DataProvider);

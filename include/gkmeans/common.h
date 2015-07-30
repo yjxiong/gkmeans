@@ -15,6 +15,7 @@
 #include <utility>
 #include <algorithm>
 #include <thread>
+#include <random>
 
 //include CUDA libraries
 #include <cublas_v2.h>
