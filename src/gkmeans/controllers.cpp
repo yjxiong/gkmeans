@@ -118,15 +118,32 @@ namespace gkmeans{
     }
   }
 
-
   template<typename Dtype>
   void KMeansController<Dtype>::Step(){
+    bool started = false;
+
+    for (int iteration = 0; iteration < 10; ++iteration){
+      /** one iteration includes maximization and estimation**/
+      bool iter_finised = false;
+      //TODO: maximization
+      while (!iter_finised){
+        int batch_num = 0;
+        Mat<Dtype>* batch_data = this->data_providers[0]->GetData(batch_num);
+
+        if ( this->data_provider[0]->current_index()  == 0){
+          iter_finised = true;
+          //execute functions
+        }
+      }
+      //TODO: esitimization
+
+    }
 
   }
 
   template<typename Dtype>
   void KMeansController<Dtype>::PostProcess(){
-
+    /** Run processing of cluster centers **/
   }
 
   INSTANTIATE_CLASS(KMeansController);
