@@ -91,9 +91,9 @@ namespace gkmeans {
 
       controller.Solve(1); //do one iteration
 
-      Mat<Dtype>* center_mat = controller.mats()[1].get();
+//      Mat<Dtype>* center_mat = controller.mats()[1].get();
 
-      const Dtype* center_data = center_mat->cpu_data();
+      const Dtype* center_data = controller.numeric_outputs()[0]->cpu_data();
 
       float results[] = {16.5000000000000,
           90,
@@ -110,7 +110,7 @@ namespace gkmeans {
       EXPECT_NEAR(center_data[1 * 20], results[1], 0.1);
       EXPECT_NEAR(center_data[4 * 20], results[4], 0.1);
 
-      controller.data_providers()[0]->EndPrefetching();
+//      controller.data_providers()[0]->EndPrefetching();
 
     }
 
@@ -119,8 +119,6 @@ namespace gkmeans {
       controller.SetUp();
 
       controller.Solve(10);
-
-      controller.data_providers()[0]->EndPrefetching();
     }
 
   protected:

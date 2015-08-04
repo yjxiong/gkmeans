@@ -31,9 +31,8 @@ namespace gkmeans{
 
     virtual ~DataProviderBase(){
       if (num_future_.valid()){
-        num_future_.get();
+        num_future_.wait();
       }
-
       data_slot_vec_.clear();
     }
 
@@ -79,7 +78,7 @@ namespace gkmeans{
     /**
      * @brief prepare the data and return the number of this batch
      */
-    virtual size_t PrepareData(Mat<Dtype> * output_mat) = 0;
+    virtual size_t PrepareData(Mat<Dtype> * output_mat){return 0;}
 
 
     /**

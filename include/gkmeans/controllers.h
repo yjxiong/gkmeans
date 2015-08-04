@@ -21,8 +21,6 @@ namespace gkmeans {
     };
 
     virtual ~Controller(){
-
-      //clean up the mass
       funcs_.clear();
       mats_.clear();
       data_providers_.clear();
@@ -54,6 +52,9 @@ namespace gkmeans {
     vector<string>& func_names(){return func_names_;}
     vector<string>& mat_names(){return mat_names_;}
     vector<shared_ptr<DataProviderBase<Dtype>> >& data_providers(){ return data_providers_;}
+
+    vector<shared_ptr<Mat<Dtype> > >& numeric_outputs(){return numeric_outputs_;}
+    vector<shared_ptr<Mat<int> > >& int_outputs(){return int_outputs_;}
 
   protected:
 

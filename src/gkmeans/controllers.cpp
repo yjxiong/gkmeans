@@ -168,7 +168,6 @@ namespace gkmeans{
     /** Use the cluster center calculated to get cluster labels**/
 
     int* label_data = this->int_outputs_[0]->mutable_cpu_data();
-    Dtype* center_data = this->numeric_outputs_[0]->mutable_gpu_data();
 
     // first restart the data provider.
     this->data_providers_[0]->ForceRestart();

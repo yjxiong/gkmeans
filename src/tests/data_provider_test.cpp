@@ -27,9 +27,6 @@ namespace gkmeans {
 
       /** Dummy data provider shoud set the data size to (1) */
       EXPECT_EQ((int)mat->count(), 1);
-
-      dp.EndPrefetching();
-
     }
 
     void TestDataFlow(){
@@ -49,9 +46,6 @@ namespace gkmeans {
         CHECK_EQ(num, 1);
         CHECK_EQ(out_mat->cpu_data()[0], run);
       }
-
-      dp.EndPrefetching();
-
     }
   protected:
 
@@ -97,8 +91,6 @@ namespace gkmeans {
           EXPECT_EQ(data[idx2d(i, j, out_mat->shape(1))], i);
         }
       }
-
-      dp.EndPrefetching();
     }
 
     void TestDataFlow(){
