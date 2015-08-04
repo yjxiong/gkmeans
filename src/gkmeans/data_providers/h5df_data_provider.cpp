@@ -75,7 +75,7 @@ namespace gkmeans {
     size_t this_batch = std::min(batch_size_, (this->round_size_ - this->current_index_));
 
     /** read data */
-    offset_[0] = this->current_index_;
+    offset_[0] = this->prefetch_index_;
     h5_data_space_.selectHyperslab(H5S_SELECT_SET, mem_dims_.data(), offset_.data());
     h5_mem_space_.selectHyperslab(H5S_SELECT_SET, mem_dims_.data(), zero_offset_.data());
     h5_dataset_.read(output_mat->mutable_cpu_data(), H5::PredType::NATIVE_FLOAT, h5_mem_space_, h5_data_space_);

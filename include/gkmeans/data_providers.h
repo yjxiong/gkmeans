@@ -34,9 +34,7 @@ namespace gkmeans{
         num_future_.get();
       }
 
-      for (size_t i = 0; i < slot_size_; ++i){
-        delete data_slot_vec_[i];
-      }
+      data_slot_vec_.clear();
     }
 
     inline virtual const char* DataType(){return "";}
@@ -44,12 +42,17 @@ namespace gkmeans{
     /**
      * @brief the exposed interface to get ready to process data
      */
-    Mat<Dtype>* GetData(size_t& num);
+    shared_ptr<Mat<Dtype>> GetData(size_t& num);
 
     /**
      * @brief exposed setup function
      */
-    Mat<Dtype>* SetUp();
+    shared_ptr<Mat<Dtype>> SetUp();
+
+    /**
+     * @brief an exposed method for force restarting the data streaming
+     */
+    void ForceRestart();
 
     /**
      * @brief Async function to prefetch the data
@@ -67,6 +70,11 @@ namespace gkmeans{
       LOG(FATAL)<<"DataSetUp() not implemented. Did you type DataSetup?";
       return NULL;
     };
+
+    /**
+     * @brief virtual method to rewind the data cursor of the data provider
+     */
+    virtual void AdditionalRestartOps(){};
 
     /**
      * @brief prepare the data and return the number of this batch
@@ -100,7 +108,7 @@ namespace gkmeans{
      * This is where we store the data mats.
      * Usually we have two slots, one serving the functions and one getting filled by PrepareData()
      */
-    vector<Mat<Dtype>* > data_slot_vec_;
+    vector<shared_ptr<Mat<Dtype>> > data_slot_vec_;
     size_t slot_size_;
     deque<size_t> data_q_;
 

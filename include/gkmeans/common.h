@@ -34,6 +34,7 @@
 #include <memory>
 
 using std::shared_ptr;
+using std::unique_ptr;
 using std::pair;
 using std::vector;
 using std::printf;

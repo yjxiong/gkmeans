@@ -23,7 +23,7 @@ namespace gkmeans {
       controller.SetUp();
 
 //      vector<FunctionBase<Dtype>* >& funcs = controller.funcs();
-      vector<Mat<Dtype>* >& mats = controller.mats();
+      vector< shared_ptr<Mat<Dtype> > >& mats = controller.mats();
 
       map<string, int>& func_name_mapping = controller.name_func_indices();
 
@@ -32,35 +32,35 @@ namespace gkmeans {
       EXPECT_EQ(func_name_mapping.at("estimate"), 1);
 
       /** check mat links */
-      Mat<Dtype>* src_mat = mats[0];
+      Mat<Dtype>* src_mat = mats[0].get();
       EXPECT_EQ(controller.mat_names()[0], "X");
       EXPECT_EQ(src_mat->shape().size(), 2);
       EXPECT_EQ(src_mat->shape(0), 20);
       EXPECT_EQ(src_mat->shape(1), 20);
 
-      Mat<Dtype>* y_old = mats[1];
+      Mat<Dtype>* y_old = mats[1].get();
       EXPECT_EQ(controller.mat_names()[1], "Y_old");
       EXPECT_EQ(y_old->shape().size(), 2);
       EXPECT_EQ(y_old->shape(0), 10);
       EXPECT_EQ(y_old->shape(1), 20);
 
-      Mat<Dtype>* D = mats[2];
+      Mat<Dtype>* D = mats[2].get();
       EXPECT_EQ(controller.mat_names()[2], "DI");
       EXPECT_EQ(D->shape().size(), 1);
       EXPECT_EQ(D->shape(0), 20);
 
-      Mat<Dtype>* DI = mats[3];
+      Mat<Dtype>* DI = mats[3].get();
       EXPECT_EQ(controller.mat_names()[3], "D");
       EXPECT_EQ(DI->shape().size(), 1);
       EXPECT_EQ(DI->shape(0), 20);
 
-      Mat<Dtype>* Y_new = mats[4];
+      Mat<Dtype>* Y_new = mats[4].get();
       EXPECT_EQ(controller.mat_names()[4], "Y_new");
       EXPECT_EQ(Y_new->shape().size(), 2);
       EXPECT_EQ(Y_new->shape(0), 10);
       EXPECT_EQ(Y_new->shape(1), 20);
 
-      Mat<Dtype>* Isum = mats[4];
+      Mat<Dtype>* Isum = mats[4].get();
       EXPECT_EQ(controller.mat_names()[5], "Isum");
       EXPECT_EQ(Isum->shape().size(), 2);
       EXPECT_EQ(Isum->shape(0), 10);
@@ -74,7 +74,7 @@ namespace gkmeans {
 
       controller.Seed();
 
-      Mat<Dtype>* mat = controller.mats()[1];
+      Mat<Dtype>* mat = controller.mats()[1].get();
 
       const Dtype* y_data = mat->cpu_data();
       for (int i = 0; i < 10; ++i){
@@ -91,7 +91,7 @@ namespace gkmeans {
 
       controller.Solve(1); //do one iteration
 
-      Mat<Dtype>* center_mat = controller.mats()[1];
+      Mat<Dtype>* center_mat = controller.mats()[1].get();
 
       const Dtype* center_data = center_mat->cpu_data();
 
@@ -112,6 +112,15 @@ namespace gkmeans {
 
       controller.data_providers()[0]->EndPrefetching();
 
+    }
+
+    void TestKMeansMultipleIters(){
+      KMeansController<Dtype> controller;
+      controller.SetUp();
+
+      controller.Solve(10);
+
+      controller.data_providers()[0]->EndPrefetching();
     }
 
   protected:
@@ -153,4 +162,10 @@ namespace gkmeans {
   TYPED_TEST(KMeansControllerTest, TestRun){
     this->TestKmeansSolve();
   }
+
+  TYPED_TEST(KMeansControllerTest, TestMultipleRun){
+    this->TestKMeansMultipleIters();
+  }
+
+
 }

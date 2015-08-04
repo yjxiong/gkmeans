@@ -20,17 +20,17 @@ namespace gkmeans{
 
     //register controller structure
     FunctionBase<Dtype>* func = new NearestNeighborFunction<Dtype>();
-    this->funcs_.push_back(func);
+    this->funcs_.push_back(shared_ptr<FunctionBase<Dtype>>(func));
     this->registerFuncName("maximize");
 
     func = new CenterOfMassFunction<Dtype>();
-    this->funcs_.push_back(func);
+    this->funcs_.push_back(shared_ptr<FunctionBase<Dtype>>(func));
     this->registerFuncName("estimate");
 
     /** Build data provider **/
-    DataProviderBase<Dtype>* dp = new HDF5DataProvider<Dtype>(GKMeans::stream(1));
+    shared_ptr<DataProviderBase<Dtype> > dp( new HDF5DataProvider<Dtype>(GKMeans::stream(1)));
     this->data_providers_.push_back(dp);
-    Mat<Dtype>* source_mat = dp->SetUp();
+    shared_ptr<Mat<Dtype> > source_mat = dp->SetUp();
 
     /**
      * setup input and output
@@ -48,29 +48,28 @@ namespace gkmeans{
     this->markMat(input_1, input_id_1);
     batch_size_ = source_mat->shape(0);
 
-    this->mats_.push_back(new Mat<Dtype>());
+    this->mats_.push_back(shared_ptr<Mat<Dtype>>(new Mat<Dtype>()));
     this->registerMatName("Y_old");
-    input_0.push_back(this->mats_.back());
+    input_0.push_back(this->mats_.back().get());
     this->markMat(input_0, input_id_0);
 
     /*intermediate results*/
-    this->mats_.push_back(new Mat<Dtype>());
+    this->mats_.push_back(shared_ptr<Mat<Dtype>>(new Mat<Dtype>()));
     this->registerMatName("DI");
     this->markMat(output_0, output_id_0);
     this->markMat(input_1, input_id_1);
 
 
-    this->mats_.push_back(new Mat<Dtype>());
+    this->mats_.push_back(shared_ptr<Mat<Dtype>>(new Mat<Dtype>()));
     this->registerMatName("D");
     this->markMat(output_0, output_id_0);
     this->markMat(input_1, input_id_1);
 
-    /*output*/
-    this->mats_.push_back(new Mat<Dtype>());
+    this->mats_.push_back(shared_ptr<Mat<Dtype>>(new Mat<Dtype>()));
     this->registerMatName("Y_new");
     this->markMat(output_1, output_id_1);
 
-    this->mats_.push_back(new Mat<Dtype>());
+    this->mats_.push_back(shared_ptr<Mat<Dtype>>(new Mat<Dtype>()));
     this->registerMatName("Isum");
     this->markMat(output_1, output_id_1);
 
@@ -87,15 +86,23 @@ namespace gkmeans{
     this->function_output_id_vecs_.push_back(output_id_1);
 
     //setup mat shapes
-    M_ = this->data_providers_[0]->round_size();
+    M_ = dp->round_size();
     K_ = this->mats_[0]->shape(1);
     N_ = std::stoul(GKMeans::get_config("n_cluster"));
 
     this->mats_[1]->Reshape(vector<size_t>({N_, K_}));
 
-    for (size_t i = 0; i < this->funcs_.size(); ++i){
+    for (size_t i = 0; i < this->funcs_.size(); i++){
       this->funcs_[i]->SetUp(this->function_input_vecs_[i], this->function_output_vecs_[i]);
     }
+
+    //setup output mats
+    this->int_outputs_.push_back(
+        shared_ptr<Mat<int> >(new Mat<int>(vector<size_t>({M_})))
+    );
+    this->numeric_outputs_.push_back(shared_ptr<Mat<Dtype> >(
+        new Mat<Dtype>(vector<size_t>({N_, K_})))
+    );
 
   }
 
@@ -132,7 +139,7 @@ namespace gkmeans{
     gk_gpu_set(this->mats_[5]->count(), this->mats_[5]->mutable_gpu_data(), 0, GKMeans::stream(0));
     while (!iter_finised){
       size_t batch_num = 0;
-      Mat<Dtype>* batch_mat = this->data_providers_[0]->GetData(batch_num);
+      this->mats_[0] = this->data_providers_[0]->GetData(batch_num);
       CHECK_EQ(batch_num, batch_size_);
 
 
@@ -140,11 +147,10 @@ namespace gkmeans{
         iter_finised = true;
       }
       //execute functions
-      this->mats_[0] = batch_mat;
-      this->function_input_vecs_[0][0] = batch_mat;
+      this->function_input_vecs_[0][0] = this->mats_[0].get();
 
       //run forward
-      for (int i = 0; i < this->funcs_.size(); ++i){
+      for (size_t i = 0; i < this->funcs_.size(); ++i){
         this->funcs_[i]->Execute(this->function_input_vecs_[i], this->function_output_vecs_[i], GKMeans::stream(0));
       }
 
@@ -160,22 +166,35 @@ namespace gkmeans{
   template<typename Dtype>
   void KMeansController<Dtype>::PostProcess(){
     /** Use the cluster center calculated to get cluster labels**/
+
+    int* label_data = this->int_outputs_[0]->mutable_cpu_data();
+    Dtype* center_data = this->numeric_outputs_[0]->mutable_gpu_data();
+
+    // first restart the data provider.
+    this->data_providers_[0]->ForceRestart();
+
+    // assign cluster labels
     bool assignment_finished = false;
     while (!assignment_finished){
       size_t batch_num = 0;
-      Mat<Dtype>* batch_mat = this->data_providers_[0]->GetData(batch_num);
+      this->mats_[0] = this->data_providers_[0]->GetData(batch_num);
       if ( this->data_providers_[0]->current_index()  == 0){
         assignment_finished = true;
       }
       //execute only the maximization functions for all samples
-      this->mats_[0] = batch_mat;
-      this->function_input_vecs_[0][0] = batch_mat;
-
+      this->function_input_vecs_[0][0] = this->mats_[0].get();
       this->funcs_[0]->Execute(this->function_input_vecs_[0], this->function_output_vecs_[0], GKMeans::stream(0));
 
-      //TODO: copy out results
+      // copy out cluster labels
+      size_t index = this->data_providers_[0]->current_index();
+      int* out_data = (int*)this->mats_[3]->cpu_data();
+      for (size_t i = 0; i < batch_num; i ++){
+        label_data[i + index] = out_data[i];
+      }
     }
 
+    // copy out center data
+    memcpy(this->numeric_outputs_[0]->mutable_cpu_data(), this->mats_[1]->cpu_data(), this->mats_[1]->count() * sizeof(Dtype));
   }
 
   INSTANTIATE_CLASS(KMeansController);

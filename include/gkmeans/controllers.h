@@ -21,12 +21,13 @@ namespace gkmeans {
     };
 
     virtual ~Controller(){
-      for (size_t i = 0; i < funcs_.size(); ++i){
-//        delete funcs_[i];
-      }
-      for (size_t i = 0; i < mats_.size(); ++i){
-//        delete mats_[i];
-      }
+
+      //clean up the mass
+      funcs_.clear();
+      mats_.clear();
+      data_providers_.clear();
+      int_outputs_.clear();
+      numeric_outputs_.clear();
     }
 
     virtual void Seed() = 0;
@@ -47,12 +48,12 @@ namespace gkmeans {
 
     /** internal structure accessors */
     vector<FunctionBase<Dtype>* >& funcs(){return funcs_; }
-    vector<Mat<Dtype>* >& mats(){return mats_;}
+    vector<shared_ptr<Mat<Dtype> > >& mats(){return mats_;}
     map<string, int>& name_func_indices(){return name_func_indices_;}
     map<string, int>& name_mat_indices(){return name_mat_indices_;}
     vector<string>& func_names(){return func_names_;}
     vector<string>& mat_names(){return mat_names_;}
-    vector<DataProviderBase<Dtype>* >& data_providers(){ return data_providers_;}
+    vector<shared_ptr<DataProviderBase<Dtype>> >& data_providers(){ return data_providers_;}
 
   protected:
 
@@ -67,13 +68,13 @@ namespace gkmeans {
     }
 
     void markMat(vector<Mat<Dtype>* >& vec, vector<int>& id_vec_){
-      vec.push_back(this->mats_.back());
+      vec.push_back(this->mats_.back().get());
       id_vec_.push_back(this->mats_.size() - 1);
     }
 
-    vector<FunctionBase<Dtype>* > funcs_;
-    vector<Mat<Dtype>* >mats_;
-    vector<DataProviderBase<Dtype>* > data_providers_;
+    vector<shared_ptr<FunctionBase<Dtype>> > funcs_;
+    vector<shared_ptr<Mat<Dtype> > >mats_;
+    vector<shared_ptr<DataProviderBase<Dtype>> > data_providers_;
 
     map<string, int> name_mat_indices_;
     map<string, int> name_func_indices_;
@@ -84,6 +85,10 @@ namespace gkmeans {
     vector<vector<Mat<Dtype> * > > function_output_vecs_;
     vector<vector<int> > function_input_id_vecs_;
     vector<vector<int> > function_output_id_vecs_;
+
+    /** Output mats **/
+    vector<shared_ptr<Mat<int> > > int_outputs_;
+    vector<shared_ptr<Mat<Dtype> > > numeric_outputs_;
 
     int round_;
     cudaStream_t stream_;

@@ -23,7 +23,7 @@ namespace gkmeans {
 
       DummyDataProvider<Dtype> dp(t0);
 
-      Mat<Dtype>* mat = dp.SetUp();
+      Mat<Dtype>* mat = dp.SetUp().get();
 
       /** Dummy data provider shoud set the data size to (1) */
       EXPECT_EQ((int)mat->count(), 1);
@@ -44,7 +44,7 @@ namespace gkmeans {
       size_t num = 0;
 
       for (int run = 0; run < 10; ++run) {
-        Mat<Dtype> *out_mat = dp.GetData(num);
+        Mat<Dtype> *out_mat = dp.GetData(num).get();
 
         CHECK_EQ(num, 1);
         CHECK_EQ(out_mat->cpu_data()[0], run);
@@ -90,7 +90,7 @@ namespace gkmeans {
       dp.SetUp();
 
       size_t num;
-      Mat<Dtype> *out_mat = dp.GetData(num);
+      Mat<Dtype> *out_mat = dp.GetData(num).get();
       const Dtype* data = out_mat->cpu_data();
       for (size_t i = 0; i < num; ++i){
         for(size_t j = 0; j < out_mat->shape(1); ++j){
@@ -115,7 +115,8 @@ namespace gkmeans {
 
       for (int run = 0; run < 20; ++run){
         size_t num;
-        Mat<Dtype> *out_mat = dp.GetData(num);
+        Mat<Dtype> *out_mat = dp.GetData(num).get();
+        CHECK_EQ(num, 20);
         const Dtype* data = out_mat->cpu_data();
         for (size_t i = 0; i < num; ++i){
           for(size_t j = 0; j < out_mat->shape(1); ++j){
