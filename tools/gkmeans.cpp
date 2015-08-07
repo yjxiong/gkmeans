@@ -51,14 +51,24 @@ void load_config(char* config_file){
   CHECK_GT(batch_size, 0)<<"Batch size must be greater than 0";
   GKMeans::set_config("batch_size", std::to_string(batch_size));
 
+  int max_iter = reader.GetInteger("Parameter", "max_iter", -1);
+  CHECK_GT(max_iter, 0)<<"Max iteration must be greater than 0";
+  GKMeans::set_config("max_iter", std::to_string(max_iter));
+
+  // Seeding
+  string seed_type = reader.Get("Seed", "type", "random");
+  GKMeans::set_config("seeding_type", seed_type);
+
   long random_seed = reader.GetInteger("Parameter", "random_seed", -1);
   if (random_seed != -1){
     GKMeans::set_config("random_seed", std::to_string(random_seed));
   }
 
-  int max_iter = reader.GetInteger("Parameter", "max_iter", -1);
-  CHECK_GT(max_iter, 0)<<"Max iteration must be greater than 0";
-  GKMeans::set_config("max_iter", std::to_string(max_iter));
+  if (seed_type == "precomputed"){
+    GKMeans::set_config("precomputed_seed_file", reader.Get("Seed", "precomputed", ""));
+    GKMeans::set_config("precomputed_seed_name", reader.Get("Seed", "seed_name", ""));
+  }
+
 
 }
 

@@ -7,6 +7,7 @@
 #include "gkmeans/controllers.h"
 #include "gkmeans/data_providers.h"
 #include "gkmeans/utils/math_ops.h"
+#include "gkmeans/utils/io.h"
 
 
 namespace gkmeans{
@@ -111,7 +112,7 @@ namespace gkmeans{
     string seeding_type = GKMeans::get_config("seeding_type");
     string random_seed_string = GKMeans::get_config("random_seed");
 
-    if ((seeding_type == "random") ||(seeding_type == "")){
+    if (seeding_type == "random"){
       // use random seeding
       vector<size_t> src;
       src.resize(M_);
@@ -130,8 +131,17 @@ namespace gkmeans{
         std::memcpy(y_data, row_data, K_ * sizeof(Dtype));
         y_data += K_;
       }
+    }else if (seeding_type == "precomputed"){
+      //load precomputed seeds stored in a data file.
+      LoadDataFromHDF5<float>(
+          GKMeans::get_config("precomputed_seed_file"), GKMeans::get_config("precomputed_seed_name"),
+          this->mats_[1].get()
+      );
+
+    }else {
+      LOG(FATAL)<<"Seeding type \""<<seeding_type<<"\" not supported";
     }
-  }
+}
 
   template<typename Dtype>
   void KMeansController<Dtype>::Step(){

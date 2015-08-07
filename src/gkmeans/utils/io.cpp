@@ -112,5 +112,40 @@ namespace gkmeans {
     return 0;
   }
 
+  template <>
+  int LoadDataFromHDF5<float>(string file_name, string mat_name, Mat<float>* mat){
+    H5File file = H5File(file_name, H5F_ACC_RDONLY);
+
+    DataSet dataset = file.openDataSet(mat_name);
+
+    auto type_class = dataset.getTypeClass();
+
+    CHECK_EQ(type_class, H5T_FLOAT)<<"dataset "<<mat_name<<" must in float format";
+
+    DataSpace fspace = dataset.getSpace();
+
+    int rank = fspace.getSimpleExtentNdims();
+    CHECK_EQ(rank, mat->shape().size())<<"input rank must be the same with the mat you want fill";
+
+    // input dimension check
+    vector<hsize_t > data_size;
+    vector<hsize_t> offset; //currently only zero offset supported
+    data_size.resize(rank); fspace.getSimpleExtentDims(data_size.data(), NULL);
+    offset.resize(rank);
+    for (int i = 0; i < rank; ++i){
+      CHECK_EQ(data_size[i], mat->shape(i)) <<"dimension "<<i<<" shape mismatch!";
+    }
+    fspace.selectHyperslab(H5S_SELECT_SET, data_size.data(), offset.data()); //select the whole dataset
+
+    // setup memory dataspace
+    DataSpace mspace(rank, data_size.data());
+    mspace.selectHyperslab(H5S_SELECT_SET, data_size.data(), offset.data());
+
+    // read data
+    dataset.read(mat->mutable_cpu_data(), PredType::NATIVE_FLOAT, mspace, fspace);
+
+    return 0;
+  }
+
 
 }
