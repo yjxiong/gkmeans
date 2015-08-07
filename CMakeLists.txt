@@ -12,6 +12,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall")
 #   Dependencies
 #----------------------
 
+
 # pthread for cxx11 thread support
 FIND_PACKAGE(Threads )
 list(APPEND LIBRARIES ${CMAKE_THREAD_LIBS_INIT})
@@ -46,6 +47,10 @@ include_directories(include)
 cuda_include_directories(include)
 set(SRC_DIR src/gkmeans)
 set(TEST_SRC_DIR src/tests)
+set(INIH_DIR inih)
+
+# inih library
+include_directories(SYSTEM ${INIH_DIR}/cpp)
 
 #----------------------
 #   Library
@@ -53,7 +58,9 @@ set(TEST_SRC_DIR src/tests)
 FILE(GLOB SRC_FILES ${SRC_DIR}/*.cpp
                     ${SRC_DIR}/utils/*.cpp
                     ${SRC_DIR}/functions/*.cpp
-                    ${SRC_DIR}/data_providers/*.cpp)
+                    ${SRC_DIR}/data_providers/*.cpp
+                    ${INIH_DIR}/cpp/*.cpp
+                    ${INIH_DIR}/*.c)
 
 FILE(GLOB CU_SRC_FILES ${SRC_DIR}/*.cu
                        ${SRC_DIR}/utils/*.cu)

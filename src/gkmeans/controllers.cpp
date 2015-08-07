@@ -119,6 +119,8 @@ namespace gkmeans{
       std::default_random_engine engine;
       if (random_seed_string != ""){
         engine.seed(std::stoul(random_seed_string));
+      }else{
+        engine.seed(std::random_device{}());
       }
       std::shuffle(src.begin(), src.end(), engine);
 
@@ -183,10 +185,11 @@ namespace gkmeans{
       //execute only the maximization functions for all samples
       this->function_input_vecs_[0][0] = this->mats_[0].get();
       this->funcs_[0]->Execute(this->function_input_vecs_[0], this->function_output_vecs_[0], GKMeans::stream(0));
+      CUDA_CHECK(cudaStreamSynchronize(GKMeans::stream(0)));
 
       // copy out cluster labels
       size_t index = this->data_providers_[0]->current_index();
-      int* out_data = (int*)this->mats_[3]->cpu_data();
+      int* out_data = (int*)this->mats_[2]->cpu_data();
       for (size_t i = 0; i < batch_num; i ++){
         label_data[i + index] = out_data[i];
       }
