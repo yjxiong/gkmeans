@@ -6,7 +6,6 @@
 
 int main(int argc, char **argv){
   ::testing::InitGoogleTest(&argc, argv);
-  cudaSetDevice(3);
   google::InstallFailureSignalHandler();
   return RUN_ALL_TESTS();
 }

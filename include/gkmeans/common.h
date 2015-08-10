@@ -47,6 +47,9 @@ using std::set;
 using std::string;
 
 namespace gkmeans {
+
+  void GlobalInit();
+
   //common code here
   class GKMeans{
 
@@ -78,8 +81,13 @@ namespace gkmeans {
     inline static string get_config(string key){return Get().configs_[key];}
     inline static void set_config(string key, string value){ Get().configs_[key] = value;}
 
+    inline static void InitDevice(){Get().initDevice();}
+
 
   protected:
+
+    void initDevice();
+
     cublasHandle_t cublas_handle_;
     curandGenerator_t curand_generator_;
     cusparseHandle_t cusparse_handle_;

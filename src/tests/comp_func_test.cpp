@@ -165,9 +165,7 @@ namespace gkmeans {
         for (size_t s = 0; s < M; s++) count += (s % N ==i)?s:0;
         for (size_t j = 0; j < K; ++j){
           EXPECT_EQ(y_data[idx2d(i, j, K)], count);
-//          cout<<y_data[idx2d(i, j, K)]<<" ";
         }
-//        cout<<"\n";
       }
     }
   protected:

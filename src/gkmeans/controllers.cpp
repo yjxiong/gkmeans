@@ -51,7 +51,6 @@ namespace gkmeans{
 
     this->mats_.push_back(shared_ptr<Mat<Dtype>>(new Mat<Dtype>()));
     this->registerMatName("Y_old");
-    input_0.push_back(this->mats_.back().get());
     this->markMat(input_0, input_id_0);
 
     /*intermediate results*/
@@ -64,7 +63,6 @@ namespace gkmeans{
     this->mats_.push_back(shared_ptr<Mat<Dtype>>(new Mat<Dtype>()));
     this->registerMatName("D");
     this->markMat(output_0, output_id_0);
-    this->markMat(input_1, input_id_1);
 
     this->mats_.push_back(shared_ptr<Mat<Dtype>>(new Mat<Dtype>()));
     this->registerMatName("Y_new");
@@ -112,7 +110,7 @@ namespace gkmeans{
     string seeding_type = GKMeans::get_config("seeding_type");
     string random_seed_string = GKMeans::get_config("random_seed");
 
-    if (seeding_type == "random"){
+    if (seeding_type == "random" || seeding_type == ""){
       // use random seeding
       vector<size_t> src;
       src.resize(M_);
@@ -154,12 +152,12 @@ namespace gkmeans{
       this->mats_[0] = this->data_providers_[0]->GetData(batch_num);
       CHECK_EQ(batch_num, batch_size_);
 
-
       if ( this->data_providers_[0]->current_index()  == 0){
         iter_finised = true;
       }
       //execute functions
       this->function_input_vecs_[0][0] = this->mats_[0].get();
+      this->function_input_vecs_[1][0] = this->mats_[0].get();
 
       //run forward
       for (size_t i = 0; i < this->funcs_.size(); ++i){

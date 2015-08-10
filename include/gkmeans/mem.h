@@ -55,8 +55,9 @@ namespace gkmeans{
   private:
     inline void init_gpu_mem(bool zero=false){
       if (!gpu_mem_ && count_){
+        int dev; cudaGetDevice(&dev);
         CUDA_CHECK(cudaMalloc(&gpu_mem_, count_));
-        if (zero) cudaMemset(gpu_mem_, 0, count_);
+        if (zero) CUDA_CHECK(cudaMemset(gpu_mem_, 0, count_));
       }
     }
     inline void init_cpu_mem(bool zero=false){

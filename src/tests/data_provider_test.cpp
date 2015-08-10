@@ -91,6 +91,8 @@ namespace gkmeans {
           EXPECT_EQ(data[idx2d(i, j, out_mat->shape(1))], i);
         }
       }
+
+      dp.EndPrefetching();
     }
 
     void TestDataFlow(){

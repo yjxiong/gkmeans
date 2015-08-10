@@ -57,6 +57,7 @@ namespace gkmeans{
      * @brief Async function to prefetch the data
      */
     inline size_t AsyncFunc(Mat<Dtype> * output_mat){
+      CUDA_CHECK(cudaSetDevice(output_mat->device_id()));
       size_t num = this->PrepareData(output_mat);
       output_mat->to_gpu_async(data_stream_);
       return num;

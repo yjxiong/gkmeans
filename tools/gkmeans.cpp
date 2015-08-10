@@ -17,6 +17,10 @@ void load_config(char* config_file){
 
   CHECK_GE(reader.ParseError(), 0)<<"Cannot parse "<<config_file<<"\n";
 
+  //system settings
+  int device_id = reader.GetInteger("Setting", "device_id", 0);
+  GKMeans::set_config("device_id", std::to_string(device_id));
+
   //load configurations
 
   // input and output, optionally the preset seeds
@@ -69,7 +73,6 @@ void load_config(char* config_file){
     GKMeans::set_config("precomputed_seed_name", reader.Get("Seed", "seed_name", ""));
   }
 
-
 }
 
 int main(int argc, char** argv){
@@ -83,6 +86,8 @@ int main(int argc, char** argv){
   LOG(INFO)<<"Loading configurations";
 
   load_config(argv[1]);
+
+  gkmeans::GlobalInit();
 
   shared_ptr<gkmeans::Controller<float>> ctrl(new gkmeans::KMeansController<float>());
 

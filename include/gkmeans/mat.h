@@ -18,7 +18,7 @@ namespace gkmeans{
   public:
     Mat(vector<size_t> shape, int device_id);
     Mat():Mat(vector<size_t>({0})){};
-    Mat(vector<size_t> shape) : Mat(shape, 0){}
+    Mat(vector<size_t> shape) : Mat(shape, std::stoul(GKMeans::get_config("device_id"))){}
 
     virtual ~Mat<Dtype>(){
       data_ptr_.reset();

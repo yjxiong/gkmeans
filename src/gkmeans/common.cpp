@@ -11,27 +11,6 @@ namespace gkmeans{
 
   GKMeans::GKMeans()
       : cublas_handle_(NULL), curand_generator_(NULL), phase_(GKMeans::SEEDING) {
-    if (cublasCreate(&cublas_handle_) != CUBLAS_STATUS_SUCCESS){
-      LOG(FATAL)<<"CUBLAS not available, will now halt.";
-    }
-
-    if (curandCreateGenerator(&curand_generator_, CURAND_RNG_PSEUDO_DEFAULT) != CURAND_STATUS_SUCCESS){
-      LOG(FATAL)<<"CURAND not available, will now halt";
-    }
-
-    if (cusparseCreate(&cusparse_handle_) != CUSPARSE_STATUS_SUCCESS){
-      LOG(FATAL)<<"CUSPARSE not available, will now halt";
-    }
-
-    /** Generally, we only need double buffer, so here we create two streams */
-    cuda_streams_.resize(2);
-    for (size_t i = 0; i < cuda_streams_.size(); ++i){
-      CUDA_CHECK(cudaStreamCreate(&cuda_streams_[i]));
-    }
-
-    /** Setupa default mat descriptor for cusparse */
-    CUSPARSE_CHECK(cusparseCreateMatDescr(&cusparse_descriptor_));
-
   }
   GKMeans::~GKMeans(){
 
@@ -55,5 +34,42 @@ namespace gkmeans{
 
   };
 
+  void GKMeans::initDevice() {
+
+    int device_id = 0;
+    string device_id_str = get_config("device_id");
+    if (device_id_str != ""){
+      device_id = std::stoul(device_id_str);
+    }else{
+      set_config("device_id", "0");
+    }
+    CUDA_CHECK(cudaSetDevice(device_id));
+
+    if (cublasCreate(&cublas_handle_) != CUBLAS_STATUS_SUCCESS){
+      LOG(FATAL)<<"CUBLAS not available, will now halt.";
+    }
+
+    if (curandCreateGenerator(&curand_generator_, CURAND_RNG_PSEUDO_DEFAULT) != CURAND_STATUS_SUCCESS){
+      LOG(FATAL)<<"CURAND not available, will now halt";
+    }
+
+    if (cusparseCreate(&cusparse_handle_) != CUSPARSE_STATUS_SUCCESS){
+      LOG(FATAL)<<"CUSPARSE not available, will now halt";
+    }
+
+    /** Generally, we only need double buffer, so here we create two streams */
+    cuda_streams_.resize(2);
+    for (size_t i = 0; i < cuda_streams_.size(); ++i){
+      CUDA_CHECK(cudaStreamCreate(&cuda_streams_[i]));
+    }
+
+    /** Setupa default mat descriptor for cusparse */
+    CUSPARSE_CHECK(cusparseCreateMatDescr(&cusparse_descriptor_));
+  }
+
+  void GlobalInit(){
+    GKMeans::InitDevice();
+
+  }
 
 }
