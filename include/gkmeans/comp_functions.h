@@ -43,8 +43,6 @@ namespace gkmeans{
 
     virtual void Execute(const vector<Mat<Dtype> *>& input_mat_vec, const vector<Mat<Dtype> *>& output_mat_vec, cudaStream_t stream);
 
-
-
   protected:
 
     shared_ptr<Mat<Dtype>> buffer_X2_, buffer_Y2_, buffer_XY_, buffer_ones_, buffer_norm_;
@@ -83,6 +81,14 @@ namespace gkmeans{
 
     void kernelExecute(const vector<Mat<Dtype> *>& input_mat_vec, const vector<Mat<Dtype> *>& output_mat_vec, cudaStream_t stream);
 
+    virtual void SetTrailingMode(size_t trailing_size){
+      trailing_m_ = trailing_size;
+    }
+
+    virtual void UnsetTrailingMode(){
+      trailing_m_ = 0;
+    }
+
   protected:
 
     size_t m_, n_, k_;
@@ -92,6 +98,8 @@ namespace gkmeans{
      * Accumulating them to the global aggregate afterwards improves the numerical stability.
      */
     shared_ptr<Mat<Dtype> > buffer_y_, buffer_isum_;
+
+    size_t trailing_m_;
 
   };
 }

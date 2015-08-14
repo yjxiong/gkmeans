@@ -45,8 +45,10 @@ namespace gkmeans{
     const Dtype* x_data = input_mat_vec[0]->gpu_data();
     const int* di_data = (int*) input_mat_vec[1]->gpu_data();
 
+    const size_t running_batch_size = (trailing_m_ == 0 )?m_:trailing_m_;
+
     //run indexed sum
-    gk_isum(m_, n_, k_, x_data, di_data, output_mat_vec[0]->mutable_gpu_data(), output_mat_vec[1]->mutable_gpu_data(), stream);
+    gk_isum(running_batch_size, n_, k_, x_data, di_data, output_mat_vec[0]->mutable_gpu_data(), output_mat_vec[1]->mutable_gpu_data(), stream);
 
     CUDA_CHECK(cudaStreamSynchronize(stream)); // seem to be causing trouble if we don't do this.
   }

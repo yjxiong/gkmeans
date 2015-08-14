@@ -72,21 +72,22 @@ namespace gkmeans {
   size_t HDF5DataProvider<Dtype>::PrepareData(Mat<Dtype> * output_mat){
 
     /** first determine the number of samples in this batch */
-    size_t this_batch = std::min(batch_size_, (this->round_size_ - this->current_index_));
+    size_t this_batch_num = std::min(batch_size_, (this->round_size_ - this->current_index_));
 
     /** read data */
     offset_[0] = this->prefetch_index_;
+    mem_dims_[0] = this_batch_num;
     h5_data_space_.selectHyperslab(H5S_SELECT_SET, mem_dims_.data(), offset_.data());
     h5_mem_space_.selectHyperslab(H5S_SELECT_SET, mem_dims_.data(), zero_offset_.data());
     h5_dataset_.read(output_mat->mutable_cpu_data(), H5::PredType::NATIVE_FLOAT, h5_mem_space_, h5_data_space_);
 
     /** post-processing */
-    this->prefetch_index_ += this_batch;
+    this->prefetch_index_ += this_batch_num;
     if (this->prefetch_index_ == this->round_size_){
       this->prefetch_index_ = 0; // rewind if neccesary
     }
 
-    return this_batch;
+    return this_batch_num;
   }
 
   template <typename Dtype>

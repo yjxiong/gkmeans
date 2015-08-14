@@ -39,7 +39,9 @@ namespace gkmeans {
     void Solve(int max_round) {
       Seed();
       for (int round = 0; round < max_round; ++round){
+        LOG(INFO)<<"Iteration "<<round;
         Step();
+        LOG(INFO)<<"Iteration "<<round<<", objective: ";
       }
       PostProcess();
     };

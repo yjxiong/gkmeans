@@ -53,6 +53,14 @@ namespace gkmeans{
      * Set up the function body
      */
     virtual void Execute(const vector<Mat<Dtype> *>& input_mat_vec, const vector<Mat<Dtype> *>& output_mat_vec, cudaStream_t stream) = 0;
+
+    /**
+     * These two methods notify the functions that we are hitting the last part of the data.
+     * So this part may not have enough number of samples to fill the whole batch.
+     */
+    virtual void SetTrailingMode(size_t trailing_size){}
+    virtual void UnsetTrailingMode(){}
+
   };
 
 }

@@ -150,18 +150,33 @@ namespace gkmeans{
     while (!iter_finised){
       size_t batch_num = 0;
       this->mats_[0] = this->data_providers_[0]->GetData(batch_num);
-      CHECK_EQ(batch_num, batch_size_);
+//      CHECK(batch_num, batch_size_);
 
       if ( this->data_providers_[0]->current_index()  == 0){
         iter_finised = true;
       }
-      //execute functions
+      //swapping in the data buffer for this batch
       this->function_input_vecs_[0][0] = this->mats_[0].get();
       this->function_input_vecs_[1][0] = this->mats_[0].get();
 
-      //run forward
-      for (size_t i = 0; i < this->funcs_.size(); ++i){
-        this->funcs_[i]->Execute(this->function_input_vecs_[i], this->function_output_vecs_[i], GKMeans::stream(0));
+      if (batch_num < batch_size_) {
+        // turn on trailing mode if reaching the final part of the data
+        LOG(INFO)<<"Entering traling mode with "<< batch_num <<" samples";
+
+        for (size_t i = 0; i < this->funcs_.size(); ++i){
+          // run functions
+          this->funcs_[i]->SetTrailingMode(batch_num);
+
+          this->funcs_[i]->Execute(this->function_input_vecs_[i], this->function_output_vecs_[i], GKMeans::stream(0));
+
+          //turn off trailing mode after finish
+          this->funcs_[i]->UnsetTrailingMode();
+        }
+      }else {
+        //run normal execution
+        for (size_t i = 0; i < this->funcs_.size(); ++i) {
+          this->funcs_[i]->Execute(this->function_input_vecs_[i], this->function_output_vecs_[i], GKMeans::stream(0));
+        }
       }
 
 
