@@ -201,6 +201,10 @@ namespace gkmeans{
     bool assignment_finished = false;
     while (!assignment_finished){
       size_t batch_num = 0;
+      size_t index = this->data_providers_[0]->current_index();
+
+      // getting current index must precede GetData()
+      // otherwise the current index in the data provide would be advanced
       this->mats_[0] = this->data_providers_[0]->GetData(batch_num);
       if ( this->data_providers_[0]->current_index()  == 0){
         assignment_finished = true;
@@ -211,9 +215,8 @@ namespace gkmeans{
       CUDA_CHECK(cudaStreamSynchronize(GKMeans::stream(0)));
 
       // copy out cluster labels
-      size_t index = this->data_providers_[0]->current_index();
       int* out_data = (int*)this->mats_[2]->cpu_data();
-      for (size_t i = 0; i < batch_num; i ++){
+      for (size_t i = 0; i < batch_num; i++){
         label_data[i + index] = out_data[i];
       }
     }
