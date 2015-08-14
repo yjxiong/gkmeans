@@ -5,7 +5,6 @@
 
 
 #include "gkmeans/data_providers.h"
-#include "../../../../../../../usr/include/c++/4.7/future"
 
 namespace gkmeans{
 
