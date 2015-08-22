@@ -161,7 +161,7 @@ namespace gkmeans{
 
       if (batch_num < batch_size_) {
         // turn on trailing mode if reaching the final part of the data
-        LOG(INFO)<<"Entering traling mode with "<< batch_num <<" samples";
+        LOG(INFO)<<"Entering trailing mode with "<< batch_num <<" samples";
 
         for (size_t i = 0; i < this->funcs_.size(); ++i){
           // run functions

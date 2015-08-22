@@ -1,0 +1,5 @@
+PROJECT_NAME = "GKMeans"
+FILE_PATTERNS = *.h *.cpp
+RECURSIVE = YES
+OUTPUT_DIRECTORY = "/home/alex/.clion10/system/cmake/generated/28b2ffef/28b2ffef/RelWithDebInfo/html"
+INPUT = "/media/ssd2/code/GKMeans/src" "/media/ssd2/code/GKMeans/include"
